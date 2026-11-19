@@ -218,3 +218,25 @@ the 170 KiB budget (OPS-02), measured on a local production build.
   connection details are in `.env.local.dev-backup` on the development Mac.
 - **Not provisioned:** object storage, CDN purge, error tracking, analytics,
   independent backups, a worker host.
+
+## Index policy change, 19 November 2026
+
+The publisher asked for every page to be indexable. This overrides PUB-03 and
+the hub and policy-page thresholds recorded above (phase 2, items 2 and 6).
+
+- **Indexable:** every published story of any type, including partner copies
+  and press material; the homepage, `/latest`, `/states` and `/corrections`;
+  all six policy pages; any section, state, topic, source or author page that
+  has public material.
+- **Still noindex, on purpose:** the newsroom and API; search result pages;
+  cursor pages (`?before=`), which canonicalise to an unstable address; a
+  retracted story; a removed story (410 or 451); a hub with nothing in it,
+  which would be a soft 404.
+- **Sitemaps:** the general sitemap lists every indexable story. The news
+  sitemap lists our own writing only and leaves out republished partner copies.
+- Migration `0004_index_all` relaxes the licensed-copy constraint and marks
+  published stories indexable. The `indexing` rollout flag was switched on in
+  production the same day.
+- Known cost: republished releases duplicate their source, so search engines
+  will usually prefer the original. Policy pages are indexed while they still
+  show the "details to be confirmed" notice.
