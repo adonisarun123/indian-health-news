@@ -199,6 +199,20 @@ the 170 KiB budget (OPS-02), measured on a local production build.
 
 ## Infrastructure
 
-- Neon project `india-health-news-dev` (`wispy-salad-61286579`), free-plan
-  organization, region `aws-ap-southeast-1`, Postgres 17. Dev only.
-- No Vercel project and no worker host yet.
+- **Code:** github.com/adonisarun123/indian-health-news, branch `main`.
+- **Database:** the Neon database supplied on 19 November 2026 (endpoint
+  `ep-soft-feather-b3jn6g1u`, Singapore, Postgres 18). Migrated and seeded with
+  taxonomy, search synonyms and the six policy pages. No demo content.
+- **Web:** Vercel project `indian-health-news`, deploying from `main`.
+  Production environment variables: `DATABASE_URL`, `INGEST_SECRET_KEY`,
+  `CRON_SECRET`, `SITE_NAME`. Preview deployments have no database on purpose.
+- **Scheduler:** `vercel.json` calls `/api/internal/tick` once a day, the most a
+  Hobby plan allows. Ingest and newsroom actions process their own work
+  straight after the response, so day-to-day publishing does not wait for it.
+  Scheduled releases and rights-expiry sweeps do: for those, raise the cron to
+  every minute on a paid plan or run `npm run worker` on a host.
+- **Unused:** the earlier Neon dev project `india-health-news-dev`
+  (`wispy-salad-61286579`) still exists with fictional demo data. Its
+  connection details are in `.env.local.dev-backup` on the development Mac.
+- **Not provisioned:** object storage, CDN purge, error tracking, analytics,
+  independent backups, a worker host.
