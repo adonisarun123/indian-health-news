@@ -140,23 +140,24 @@ describe("index policy and labelling", () => {
     expect(home).toContain("Source update");
   });
 
-  it("labels a partner copy, credits the original author and keeps it noindex", async () => {
+  it("labels a partner copy, credits the original author and indexes every page with content", async () => {
     await ctx.db.update(featureFlags).set({ enabled: true }).where(eq(featureFlags.key, "indexing"));
     const copy = await html("/news/community-clinic-timetable-published");
     expect(copy).toContain("Republished from Partner Health Wire");
     expect(copy).toContain("By Partner Health Wire");
-    expect(robots(copy)).toContain("noindex");
-    // With indexing switched on, an original report is indexable; search and paginated pages are not.
+    expect(robots(copy)).toBe("index, follow, max-image-preview:large");
+    // With indexing switched on, every story is indexable; search and paginated pages are not.
     expect(robots(await html("/news/district-reporting-calendar"))).toBe("index, follow, max-image-preview:large");
     expect(robots(await html("/search?q=district"))).toContain("noindex");
     const latest = await html("/latest");
     expect(robots(latest)).toContain("index, follow");
     expect(canonical(latest)).toBe(`${ORIGIN}/latest`);
-    // A thin hub and a placeholder policy page stay out of the index.
-    expect(robots(await html("/section/policy"))).toContain("noindex");
-    // A policy page with unconfirmed publisher details or no reviewer stays out of the index.
+    // A hub with material and every policy page are indexable; an empty hub and a cursor page are not.
+    expect(robots(await html("/section/policy"))).toContain("index, follow");
+    expect(robots(await html("/state/goa"))).toContain("noindex");
+    expect(robots(await html("/latest?before=2026-01-01T00:00:00.000Z_00000000-0000-0000-0000-000000000000"))).toContain("noindex");
     const privacy = await html("/privacy");
-    expect(robots(privacy)).toContain("noindex");
+    expect(robots(privacy)).toContain("index, follow");
     expect(privacy).toContain("still to be confirmed by the publisher");
     expect(privacy).toContain("Version 1, effective");
   });
@@ -315,10 +316,11 @@ describe("discovery outputs and cache invalidation (SEO-02, SD, ARC-02)", () => 
     const articlesXml = await (await get("/sitemaps/articles-1.xml")).text();
     expect(articlesXml).toContain(`<loc>${ORIGIN}/news/district-reporting-calendar</loc>`);
     expect(articlesXml).toContain(`<loc>${ORIGIN}/news/journal-window</loc>`);
-    for (const absent of ["private-draft", "community-clinic-timetable-published", "device-procurement-workshop-dates", "bengaluru-hospital-board-schedule", "journal-submission-window"]) expect(articlesXml, absent).not.toContain(absent);
+    expect(articlesXml).toContain(`<loc>${ORIGIN}/news/community-clinic-timetable-published</loc>`);
+    for (const absent of ["private-draft", "device-procurement-workshop-dates", "bengaluru-hospital-board-schedule", "journal-submission-window"]) expect(articlesXml, absent).not.toContain(absent);
     const pagesXml = await (await get("/sitemaps/pages.xml")).text();
     expect(pagesXml).toContain(`<loc>${ORIGIN}/corrections</loc>`);
-    expect(pagesXml).not.toContain("/privacy");
+    expect(pagesXml).toContain(`<loc>${ORIGIN}/privacy</loc>`);
     expect(pagesXml).not.toContain("/search");
     expect((await get("/sitemaps/articles-2.xml")).status).toBe(404);
 

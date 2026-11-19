@@ -494,7 +494,7 @@ export const articles = pgTable(
     index("articles_schedule_idx").on(t.scheduledAt).where(sql`${t.status} = 'scheduled'`),
     check(
       "articles_licensed_ck",
-      sql`${t.type} <> 'licensed_copy' or (${t.sourceItemId} is not null and ${t.grantId} is not null and ${t.isIndexable} = false)`,
+      sql`${t.type} <> 'licensed_copy' or (${t.sourceItemId} is not null and ${t.grantId} is not null)`,
     ),
   ],
 );

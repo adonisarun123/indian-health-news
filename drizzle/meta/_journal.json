@@ -29,6 +29,13 @@
       "when": 1795108666338,
       "tag": "0003_newsroom",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1795112400000,
+      "tag": "0004_index_all",
+      "breakpoints": true
     }
   ]
 }

@@ -65,10 +65,10 @@ export async function reconcile(db: Db, now: Date): Promise<ReconcileReport> {
     // 4. Events that have waited more than ten minutes for delivery (OPS-02 alert threshold).
     const stale = await tx.select({ id: outbox.id }).from(outbox).where(and(isNull(outbox.processedAt), lt(outbox.createdAt, new Date(now.getTime() - 10 * 60_000))));
 
-    // 5. Indexable flags on anything that is not an original, public story.
+    // 5. Indexable flags on anything that is not a public story.
     const bad = await tx.execute<{ id: string }>(sql`
       update articles set is_indexable = false
-      where is_indexable and (public_version_id is null or type in ('licensed_copy', 'press_material') or status in ('retracted', 'removed'))
+      where is_indexable and (public_version_id is null or status in ('retracted', 'removed'))
       returning id`);
 
     const report: ReconcileReport = { suppressionsReapplied: leaked.rows.length, storiesMissingSource: orphans.rows.map((o) => o.slug), scheduledJobsRestored: restored, staleOutboxEvents: stale.length, ineligibleSitemapEntries: bad.rows.length };

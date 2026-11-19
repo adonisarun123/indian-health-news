@@ -21,7 +21,7 @@ export async function GET(_req: Request, ctx: { params: Promise<{ name: string }
     const entries: { loc: string; lastmod?: Date }[] = ["/", "/latest", "/states", "/corrections"].map((p) => ({ loc: absolute(p) }));
     for (const slug of PAGE_SLUGS) {
       const page = await getPage(db, slug);
-      if (page && page.missing.length === 0 && page.reviewedBy) entries.push({ loc: absolute(`/${slug}`), lastmod: page.effectiveAt });
+      if (page) entries.push({ loc: absolute(`/${slug}`), lastmod: page.effectiveAt });
     }
     for (const hub of await listIndexableHubs(db, now)) entries.push({ loc: absolute(`/${hub.kind}/${hub.slug}`) });
     for (const slug of await listIndexableAuthors(db, now)) entries.push({ loc: absolute(`/authors/${slug}`) });

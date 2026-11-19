@@ -17,8 +17,8 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   const author = await getAuthor(getDb(), slug);
   if (!author) return {};
   const before = first((await searchParams).before);
-  // A profile is substantive when it carries a biography as well as work (WEB-01 URL map).
-  const substantive = Boolean(author.bio) && (await countFeed(getDb(), new Date(), { authorId: author.id })) > 0;
+  // A profile is indexable once it carries published work.
+  const substantive = (await countFeed(getDb(), new Date(), { authorId: author.id })) > 0;
   return pageMeta({ title: author.name, description: author.bio ?? `Reports by ${author.name}.`, path: `/authors/${author.slug}`, indexable: substantive && !before });
 }
 

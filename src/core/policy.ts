@@ -152,7 +152,11 @@ export function checkArticlePublish(i: ArticlePublishInput): FieldError[] {
   return e;
 }
 
-/** Only independently written work with a recorded contribution gets an indexable local page (PUB-03). */
-export function isIndexable(type: ArticlePublishInput["type"], hasContribution: boolean): boolean {
-  return type !== "licensed_copy" && type !== "press_material" && hasContribution;
+/**
+ * Every published story page is indexable, whatever its type. The publisher
+ * overrode PUB-03 on 19 Nov 2026 (docs/DECISIONS.md): partner copies and press
+ * material are indexed too. Retraction and removal still clear the flag.
+ */
+export function isIndexable(_type: ArticlePublishInput["type"], _hasContribution: boolean): boolean {
+  return true;
 }

@@ -48,7 +48,7 @@ export interface PublicArticle {
   publishedAt: Date;
   modifiedAt: Date | null;
   correctionNote: string | null;
-  /** Licensed copies are always noindex. */
+  /** Every public story is indexable, partner copies included (publisher decision, 19 Nov 2026). */
   robots: "index" | "noindex";
   hasImage: boolean;
   citations: { url: string; label: string; publisher: string; isPrimary: boolean }[];
@@ -95,7 +95,7 @@ export async function getPublicArticle(db: Db, slug: string, now: Date, locale =
       publishedAt: a.firstPublishedAt,
       modifiedAt: a.modifiedAt,
       correctionNote: a.modifiedAt ? v!.correctionNote : null,
-      robots: a.isIndexable && a.type !== "licensed_copy" ? "index" : "noindex",
+      robots: a.isIndexable ? "index" : "noindex",
       hasImage: Boolean(v!.leadAssetId) && imagesAllowed,
       citations: cites.map((c) => ({ url: c.url, label: c.label, publisher: c.publisherName, isPrimary: c.isPrimary })),
     },

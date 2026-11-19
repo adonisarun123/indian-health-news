@@ -259,7 +259,8 @@ export async function getHub(db: Db, kind: TermKind, slug: string, now: Date): P
   }
   const originals = await countFeed(db, now, { termId: term.id, originalsOnly: true });
   const flags = await getFlags(db);
-  const indexable = Boolean(flags.indexing) && term.isHubApproved && Boolean(term.intro) && originals >= HUB_MIN_ORIGINALS;
+  // Any hub with public material is indexable. An empty hub would be a soft 404, so it stays out.
+  const indexable = Boolean(flags.indexing) && (await countFeed(db, now, { termId: term.id })) > 0;
   return { kind: "ok", term, originals, indexable };
 }
 
@@ -459,42 +460,41 @@ export interface SitemapArticle {
 }
 
 /**
- * Indexable original stories, oldest first so shard membership is stable.
+ * Indexable stories, oldest first so shard membership is stable.
  * `since` restricts to stories first published after that instant: a
  * correction never moves a story back into the news window.
  */
 export async function listSitemapArticles(db: Db, now: Date, opts: { since?: Date; limit: number; offset: number }): Promise<SitemapArticle[]> {
-  const since = opts.since ? sql`and a.first_published_at > ${iso(opts.since)}` : sql``;
+  // The news window lists our own writing only; republished partner copies stay in the general sitemap.
+  const since = opts.since ? sql`and a.first_published_at > ${iso(opts.since)} and a.type <> 'licensed_copy'` : sql``;
   const res = await db.execute<Row>(sql`
     select a.slug, fe.display_title, a.first_published_at, coalesce(a.modified_at, a.first_published_at) as lastmod
     ${publicFeed(now, "web")}
-      and fe.kind = 'article' and a.is_indexable and a.type in ('original_brief', 'original_report', 'analysis') ${since}
+      and fe.kind = 'article' and a.is_indexable ${since}
     order by a.first_published_at asc, a.id asc
     limit ${opts.limit} offset ${opts.offset}`);
   return res.rows.map((r) => ({ slug: r.slug as string, title: r.display_title as string, publishedAt: new Date(r.first_published_at as string), lastmod: new Date(r.lastmod as string) }));
 }
 
 export async function countSitemapArticles(db: Db, now: Date, since?: Date): Promise<number> {
-  const cond = since ? sql`and a.first_published_at > ${iso(since)}` : sql``;
-  const res = await db.execute<{ n: string }>(sql`select count(*) as n ${publicFeed(now, "web")} and fe.kind = 'article' and a.is_indexable and a.type in ('original_brief', 'original_report', 'analysis') ${cond}`);
+  const cond = since ? sql`and a.first_published_at > ${iso(since)} and a.type <> 'licensed_copy'` : sql``;
+  const res = await db.execute<{ n: string }>(sql`select count(*) as n ${publicFeed(now, "web")} and fe.kind = 'article' and a.is_indexable ${cond}`);
   return Number(res.rows[0]?.n ?? 0);
 }
 
-/** Hubs that qualify for the index: approved, introduced and with enough original stories. */
+/** Hubs that qualify for the index: every section, state or topic with public material. */
 export async function listIndexableHubs(db: Db, now: Date): Promise<{ kind: TermKind; slug: string }[]> {
-  const approved = await db.select().from(terms).where(and(eq(terms.isHubApproved, true)));
   const out: { kind: TermKind; slug: string }[] = [];
-  for (const t of approved) {
-    if (!t.intro) continue;
-    if ((await countFeed(db, now, { termId: t.id, originalsOnly: true })) >= HUB_MIN_ORIGINALS) out.push({ kind: t.kind, slug: t.slug });
+  for (const t of await db.select().from(terms)) {
+    if ((await countFeed(db, now, { termId: t.id })) > 0) out.push({ kind: t.kind, slug: t.slug });
   }
   return out;
 }
 
-/** Authors with a published biography and at least one public report. */
+/** Authors with a public profile and at least one public report. */
 export async function listIndexableAuthors(db: Db, now: Date): Promise<string[]> {
   const rows = await db.select().from(people).where(and(eq(people.hasPublicProfile, true), eq(people.status, "active")));
   const out: string[] = [];
-  for (const p of rows) if (p.bio && (await countFeed(db, now, { authorId: p.id })) > 0) out.push(p.slug);
+  for (const p of rows) if ((await countFeed(db, now, { authorId: p.id })) > 0) out.push(p.slug);
   return out;
 }

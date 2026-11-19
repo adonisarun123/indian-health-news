@@ -21,7 +21,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   if (!source) return {};
   const before = first((await searchParams).before);
   const items = await countFeed(getDb(), new Date(), { sourceId: source.id });
-  return pageMeta({ title: source.name, description: `Updates and reports that cite ${source.name}, with links to the original publisher.`, path: `/sources/${source.slug}`, indexable: items >= 5 && !before });
+  return pageMeta({ title: source.name, description: `Updates and reports that cite ${source.name}, with links to the original publisher.`, path: `/sources/${source.slug}`, indexable: items > 0 && !before });
 }
 
 export default async function SourcePage({ params, searchParams }: Props) {

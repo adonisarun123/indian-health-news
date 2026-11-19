@@ -182,10 +182,10 @@ describe("source register and rights (SRC-01, SRC-02, ADM-05)", () => {
     await drain(ctx, at(13));
     expect((await receipt(ctx, b, String(third.event_id), at(13))).body).toMatchObject({ status: "applied", reason_code: "COPY_PUBLISHED" });
     const page = await getPublicArticle(ctx.db, "clinic-network-publishes-holiday-hours", at(13));
-    expect(page.kind === "ok" && page.article).toMatchObject({ type: "licensed_copy", robots: "noindex", sourceAuthorLabel: "Asha Menon", author: null });
+    expect(page.kind === "ok" && page.article).toMatchObject({ type: "licensed_copy", robots: "index", sourceAuthorLabel: "Asha Menon", author: null });
     expect(page.kind === "ok" && (page.article.body as { text: string }[]).map((x) => x.text)).toEqual(["The clinic network has published its timetable.", "Evening hours start next month."]);
     const [copy] = await ctx.db.select().from(articles).where(eq(articles.slug, "clinic-network-publishes-holiday-hours"));
-    expect(copy).toMatchObject({ autoPublished: true, isIndexable: false });
+    expect(copy).toMatchObject({ autoPublished: true, isIndexable: true });
     // The copy replaces the card: one public entry for the item, not two.
     expect(await ctx.db.select().from(feedEntries).where(and(eq(feedEntries.status, "active"), eq(feedEntries.articleId, copy!.id)))).toHaveLength(1);
     expect((await listPublicFeed(ctx.db, at(13))).filter((f) => f.title === "Clinic network publishes holiday hours")).toHaveLength(1);

@@ -9,11 +9,11 @@ import { SITE_NAME, SITE_URL } from "@/lib/site";
 import { ArticleBody } from "./ArticleBody";
 import { JsonLd } from "./JsonLd";
 
-/** A policy page is indexable only when no publisher detail is missing and a reviewer is on record. */
+/** Policy pages are always indexable. Missing publisher details still show as a notice on the page. */
 export async function policyMetadata(slug: string): Promise<Metadata> {
   const page = await getPage(getDb(), slug);
   if (!page) return {};
-  return pageMeta({ title: page.title, description: page.description, path: `/${slug}`, indexable: page.missing.length === 0 && Boolean(page.reviewedBy) });
+  return pageMeta({ title: page.title, description: page.description, path: `/${slug}`, indexable: true });
 }
 
 /** Versioned policy document with its public version history (GOV-02). */

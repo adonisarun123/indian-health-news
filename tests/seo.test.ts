@@ -51,7 +51,7 @@ describe("AT-10 · SEO — sitemap membership and limits", () => {
     expect(await countSitemapArticles(ctx.db, later, new Date(later.getTime() - NEWS_WINDOW_MS))).toBe(499);
   });
 
-  it("never lists a draft, a partner copy, a removed story or a non-indexable one", async () => {
+  it("never lists a draft, a removed story or a non-indexable one", async () => {
     const set = (slug: string, values: Partial<typeof articles.$inferInsert>) => ctx.db.update(articles).set(values).where(eq(articles.slug, slug));
     await set("bulk-10", { isIndexable: false });
     await ctx.db.execute(sql`insert into suppressions (subject_type, subject_id, kind, reason) select 'article', id, 'removal_410', 'test' from articles where slug = 'bulk-11'`);

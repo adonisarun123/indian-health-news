@@ -338,7 +338,7 @@ describe("AT-05 · PUB, COR — partner copy, grant expiry and outbox replay", (
   beforeAll(async () => void (ctx = await createCtx()));
   afterAll(() => ctx.close());
 
-  it("publishes a labelled noindex copy without the image, suppresses it on expiry and refuses the replay", async () => {
+  it("publishes a labelled copy without the image, suppresses it on expiry and refuses the replay", async () => {
     await ctx.db.update(featureFlags).set({ enabled: true }).where(eq(featureFlags.key, "licensed_feeds"));
     const wire = notice({ source_id: "partner-demo", external_id: "wire-7", source_url: "https://partner.example/wire/7", source_title: "Community clinic timetable published", source_author: "Asha Menon" });
     await send(ctx, ctx.seed.producers.b, wire, T0);
@@ -359,10 +359,10 @@ describe("AT-05 · PUB, COR — partner copy, grant expiry and outbox replay", (
     const live = await getPublicArticle(ctx.db, copy.slug, at(3));
     expect(live.kind).toBe("ok");
     if (live.kind !== "ok") return;
-    expect(live.article).toMatchObject({ type: "licensed_copy", robots: "noindex", hasImage: false, sourceAuthorLabel: "Asha Menon", author: null });
+    expect(live.article).toMatchObject({ type: "licensed_copy", robots: "index", hasImage: false, sourceAuthorLabel: "Asha Menon", author: null });
     expect(live.article.citations).toEqual([{ url: "https://partner.example/wire/7", label: "Community clinic timetable published", publisher: "Partner Health Wire", isPrimary: true }]);
     const [row] = await ctx.db.select().from(articles).where(eq(articles.id, copy.id));
-    expect(row).toMatchObject({ isIndexable: false, grantId: ctx.seed.grants.partner });
+    expect(row).toMatchObject({ isIndexable: true, grantId: ctx.seed.grants.partner });
 
     const [publishEvent] = await ctx.db.select().from(outbox).where(and(eq(outbox.aggregateId, copy.id), eq(outbox.eventType, "article.published")));
     const delivered = ctx.delivered.filter((d) => d.event.id === publishEvent!.id);

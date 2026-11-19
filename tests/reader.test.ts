@@ -53,7 +53,7 @@ describe("reader site", () => {
     expect((await getLead(ctx.db, now))?.url).toBe("/news/journal-submission-window");
   });
 
-  it("builds section and state hubs, resolves aliases and withholds thin hubs from the index", async () => {
+  it("builds section and state hubs, resolves aliases and indexes a hub once it has material", async () => {
     const policy = await getHub(ctx.db, "section", "policy", now);
     expect(policy).toMatchObject({ kind: "ok", originals: 2, indexable: false });
     const karnataka = await listFeed(ctx.db, now, { termId: await term("state", "karnataka"), limit: 50 });
@@ -66,11 +66,10 @@ describe("reader site", () => {
     const states = await listTermsWithContent(ctx.db, "state", now);
     expect(states.map((s) => s.slug)).toEqual(["karnataka", "kerala", "tamil-nadu"]);
 
-    // A hub is indexable only with enough originals, an editor's introduction, approval and the rollout flag.
-    const id = await term("section", "policy");
-    await ctx.db.update(terms).set({ intro: "Rules, notices and consultations.", isHubApproved: true }).where(eq(terms.id, id));
+    // A hub with public material is indexable as soon as the rollout flag is on. An empty hub is not.
     await ctx.db.update(featureFlags).set({ enabled: true }).where(eq(featureFlags.key, "indexing"));
-    expect(await getHub(ctx.db, "section", "policy", now)).toMatchObject({ indexable: false, originals: 2 });
+    expect(await getHub(ctx.db, "section", "policy", now)).toMatchObject({ indexable: true, originals: 2 });
+    expect(await getHub(ctx.db, "state", "goa", now)).toMatchObject({ kind: "ok", indexable: false });
   });
 
   it("serves author and publisher profiles and keeps stub records private", async () => {
