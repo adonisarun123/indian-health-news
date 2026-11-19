@@ -28,38 +28,49 @@ export default async function Home() {
     <>
       <JsonLd graph={homeGraph({ origin: SITE_URL, name: SITE_NAME })} />
       <h1 className="visually-hidden">{SITE_NAME}</h1>
-      <div className="home-top">
-        {lead ? (
-          <section className="lead" aria-label="Lead story">
-            <p className="kicker">{lead.section ? <Link href={`/section/${lead.section.slug}`}>{lead.section.name}</Link> : "News"}</p>
-            <h2>
-              <Link href={lead.url}>{lead.title}</Link>
-            </h2>
-            {lead.standfirst && <p className="standfirst">{lead.standfirst}</p>}
-            <p className="meta">
-              {lead.author && <>{lead.author.name} · </>}
-              <time dateTime={isoIst(lead.visibleFrom)}>{shortDateTime(lead.visibleFrom, now)}</time>
-            </p>
-          </section>
-        ) : (
-          <section className="note">
-            <p>No reports have been published yet.</p>
-          </section>
-        )}
-        <section aria-labelledby="latest-heading">
-          <h2 id="latest-heading" className="section-title">
-            Latest updates
-          </h2>
-          {latest.length > 0 ? <FeedList items={latest} now={now} twoCol /> : <p className="note">Nothing new in the last few hours.</p>}
-          {(next || latest.length >= 10) && (
-            <p style={{ marginTop: "1rem" }}>
-              <Link className="button" href="/latest">
-                All latest updates
-              </Link>
-            </p>
-          )}
+      {!lead && latest.length === 0 ? (
+        <section className="empty-state" aria-labelledby="empty-heading">
+          <h2 id="empty-heading">No reports have been published yet</h2>
+          <p>Reports and source updates appear here as soon as an editor publishes them.</p>
+          <p className="empty-actions">
+            <Link className="button primary" href="/submit-news">
+              Submit news
+            </Link>
+            <Link className="button" href="/about">
+              About {SITE_NAME}
+            </Link>
+          </p>
         </section>
-      </div>
+      ) : (
+        <div className={lead ? "home-top" : undefined}>
+          {lead ? (
+            <section className="lead" aria-label="Lead story">
+              <p className="kicker">{lead.section ? <Link href={`/section/${lead.section.slug}`}>{lead.section.name}</Link> : "News"}</p>
+              <h2>
+                <Link href={lead.url}>{lead.title}</Link>
+              </h2>
+              {lead.standfirst && <p className="standfirst">{lead.standfirst}</p>}
+              <p className="meta">
+                {lead.author && <>{lead.author.name} · </>}
+                <time dateTime={isoIst(lead.visibleFrom)}>{shortDateTime(lead.visibleFrom, now)}</time>
+              </p>
+            </section>
+          ) : null}
+          <section aria-labelledby="latest-heading">
+            <h2 id="latest-heading" className="section-title">
+              Latest updates
+            </h2>
+            {latest.length > 0 ? <FeedList items={latest} now={now} twoCol /> : <p className="note">Nothing new in the last few hours.</p>}
+            {(next || latest.length >= 10) && (
+              <p style={{ marginTop: "1rem" }}>
+                <Link className="button" href="/latest">
+                  All latest updates
+                </Link>
+              </p>
+            )}
+          </section>
+        </div>
+      )}
 
       <div className="discover">
         <section aria-labelledby="states-heading">
@@ -90,6 +101,16 @@ export default async function Home() {
           </ul>
         </section>
       </div>
+
+      <section className="cta-band" aria-labelledby="cta-heading">
+        <div>
+          <h2 id="cta-heading">Have health news to share?</h2>
+          <p>Send a press release, announcement, research finding or story tip to our desk. An editor reviews every submission before anything is published.</p>
+        </div>
+        <Link className="button primary" href="/submit-news">
+          Submit news
+        </Link>
+      </section>
     </>
   );
 }

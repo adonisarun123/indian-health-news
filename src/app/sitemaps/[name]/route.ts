@@ -18,7 +18,7 @@ export async function GET(_req: Request, ctx: { params: Promise<{ name: string }
 
   if (name === "pages.xml") {
     if (!on) return xml(urlset([]));
-    const entries: { loc: string; lastmod?: Date }[] = ["/", "/latest", "/states", "/corrections"].map((p) => ({ loc: absolute(p) }));
+    const entries: { loc: string; lastmod?: Date }[] = ["/", "/latest", "/states", "/corrections", "/submit-news"].map((p) => ({ loc: absolute(p) }));
     for (const slug of PAGE_SLUGS) {
       const page = await getPage(db, slug);
       if (page) entries.push({ loc: absolute(`/${slug}`), lastmod: page.effectiveAt });

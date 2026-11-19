@@ -338,6 +338,7 @@ describe("discovery outputs and cache invalidation (SEO-02, SD, ARC-02)", () => 
     for (const absent of ["private-draft", "device-procurement-workshop-dates", "bengaluru-hospital-board-schedule", "journal-submission-window"]) expect(articlesXml, absent).not.toContain(absent);
     const pagesXml = await (await get("/sitemaps/pages.xml")).text();
     expect(pagesXml).toContain(`<loc>${ORIGIN}/corrections</loc>`);
+    expect(pagesXml).toContain(`<loc>${ORIGIN}/submit-news</loc>`);
     expect(pagesXml).toContain(`<loc>${ORIGIN}/privacy</loc>`);
     expect(pagesXml).not.toContain("/search");
     expect((await get("/sitemaps/articles-2.xml")).status).toBe(404);

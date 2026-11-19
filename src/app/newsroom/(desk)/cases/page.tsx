@@ -1,8 +1,11 @@
 import { getDb } from "@/db/client";
-import { CASE_REASONS, type CaseReason, listCases } from "@/core/cases";
+import { CASE_REASONS, listCases } from "@/core/cases";
+import { SUBMISSION_REASON } from "@/core/submissions";
 import { Badge, can, Flash, type SP, when } from "@/components/Desk";
 import { requireStaff } from "@/lib/session";
 import { caseResolveAction, linkCheckAction } from "../../actions";
+
+const REASON_LABELS: Record<string, string> = { ...CASE_REASONS, [SUBMISSION_REASON]: "News submission" };
 
 export const metadata = { title: "Cases" };
 
@@ -19,14 +22,14 @@ export default async function Cases({ searchParams }: { searchParams: SP }) {
   const rows = await listCases(getDb(), staff);
   return (
     <>
-      <h1>Reader cases</h1>
+      <h1>Reader cases and news submissions</h1>
       <Flash searchParams={searchParams} />
       <p className="meta">Contact details are private. Do not copy them into stories, tasks or messages.</p>
-      {rows.length === 0 && <p className="note">No reports yet.</p>}
+      {rows.length === 0 && <p className="note">No reports or submissions yet.</p>}
       {rows.map((c) => (
         <div className="panel" key={c.id}>
           <p>
-            <strong>{c.caseNumber}</strong> <Badge tone={c.isUrgent ? "warn" : undefined}>{CASE_REASONS[c.reason as CaseReason] ?? c.reason}</Badge> <Badge tone={c.status === "resolved" ? "good" : undefined}>{c.status.replace("_", " ")}</Badge> <span className="meta">{when(c.createdAt)}</span>
+            <strong>{c.caseNumber}</strong> <Badge tone={c.isUrgent ? "warn" : undefined}>{REASON_LABELS[c.reason] ?? c.reason}</Badge> <Badge tone={c.status === "resolved" ? "good" : undefined}>{c.status.replace("_", " ")}</Badge> <span className="meta">{when(c.createdAt)}</span>
           </p>
           <p style={{ whiteSpace: "pre-wrap" }}>{c.description}</p>
           <p className="meta">Contact: {c.reporterContact ?? "none given"}</p>
