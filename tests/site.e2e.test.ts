@@ -235,7 +235,10 @@ describe("newsroom and staff API (ADM-01, ADM-02, SEC-02, AT-14)", () => {
     const preview = await fetch(`${base}/newsroom/stories/${story.id}/preview`, { headers: { Cookie: reporter } });
     expect(preview.status).toBe(200);
     expect(await preview.text()).toContain("Private newsroom draft about tender dates");
-    expect((await get(`/news/${story.slug}`)).status).toBe(404);
+    // A private draft must never be reachable at its future public address.
+    const leak = await get(`/news/${story.slug}`);
+    const leakBody = await leak.text();
+    expect({ status: leak.status, hasDraft: leakBody.includes("Working text about"), hasHeadline: leakBody.includes("Private newsroom draft") }).toEqual({ status: 404, hasDraft: false, hasHeadline: false });
     expect(await html("/latest")).not.toContain("Private newsroom draft");
 
     const submitted = (await (await act(reporter, "submit", story.version + 1)).json()) as { version: number };
@@ -269,5 +272,101 @@ describe("newsroom and staff API (ADM-01, ADM-02, SEC-02, AT-14)", () => {
     expect(cases).not.toContain("private.person@example.org");
     const editorView = await (await fetch(`${base}/newsroom/cases`, { headers: { Cookie: await cookieFor("editor") } })).text();
     expect(editorView).toContain("private.person@example.org");
+  });
+});
+
+describe("discovery outputs and cache invalidation (SEO-02, SD, ARC-02)", () => {
+  const ld = (page: string) => JSON.parse(page.match(/<script type="application\/ld\+json">(.*?)<\/script>/s)![1]!) as { "@graph": Record<string, unknown>[] };
+
+  it("renders JSON-LD that matches the visible article", async () => {
+    const page = await html("/news/district-reporting-calendar");
+    const graph = ld(page)["@graph"];
+    const story = graph.find((n) => n["@type"] === "NewsArticle")!;
+    expect(page).toContain(`<h1>${story.headline as string}</h1>`);
+    expect(story.url).toBe(`${ORIGIN}/news/district-reporting-calendar`);
+    expect(story.url).toBe(canonical(page));
+    // The dates in the markup are the dates a reader sees.
+    expect(page).toContain(`Published <time dateTime="${story.datePublished as string}">`);
+    expect(page).toContain(`Updated <time dateTime="${story.dateModified as string}">`);
+    for (const url of story.citation as string[]) expect(page).toContain(`href="${url}"`);
+    const author = graph.find((n) => n["@type"] === "Person")!;
+    expect(page).toContain(`<a href="/authors/mira">${author.name as string}</a>`);
+    // A partner copy and a retraction carry no NewsArticle markup.
+    expect(ld(await html("/news/community-clinic-timetable-published"))["@graph"].some((n) => n["@type"] === "NewsArticle")).toBe(false);
+    expect(await html("/news/device-procurement-workshop-dates")).not.toContain("application/ld+json");
+    expect(ld(await html("/section/policy"))["@graph"].some((n) => n["@type"] === "CollectionPage")).toBe(true);
+    expect(ld(await html("/about"))["@graph"].some((n) => n["@type"] === "AboutPage")).toBe(true);
+  });
+
+  it("serves sitemaps, a news sitemap, robots.txt and RSS with the right membership", async () => {
+    const robotsTxt = await (await get("/robots.txt")).text();
+    expect(robotsTxt).toContain("Disallow: /newsroom");
+    expect(robotsTxt).toContain(`Sitemap: ${ORIGIN}/sitemap.xml`);
+    expect(robotsTxt).toContain(`Sitemap: ${ORIGIN}/news-sitemap.xml`);
+
+    // With indexing off, the sitemaps list nothing.
+    await ctx.db.update(featureFlags).set({ enabled: false }).where(eq(featureFlags.key, "indexing"));
+    expect(await (await get("/sitemaps/pages.xml")).text()).not.toContain("<loc>");
+    await ctx.db.update(featureFlags).set({ enabled: true }).where(eq(featureFlags.key, "indexing"));
+
+    const index = await (await get("/sitemap.xml")).text();
+    expect(index).toContain(`<loc>${ORIGIN}/sitemaps/pages.xml</loc>`);
+    expect(index).toContain(`<loc>${ORIGIN}/sitemaps/articles-1.xml</loc>`);
+    const articlesXml = await (await get("/sitemaps/articles-1.xml")).text();
+    expect(articlesXml).toContain(`<loc>${ORIGIN}/news/district-reporting-calendar</loc>`);
+    expect(articlesXml).toContain(`<loc>${ORIGIN}/news/journal-window</loc>`);
+    for (const absent of ["private-draft", "community-clinic-timetable-published", "device-procurement-workshop-dates", "bengaluru-hospital-board-schedule", "journal-submission-window"]) expect(articlesXml, absent).not.toContain(absent);
+    const pagesXml = await (await get("/sitemaps/pages.xml")).text();
+    expect(pagesXml).toContain(`<loc>${ORIGIN}/corrections</loc>`);
+    expect(pagesXml).not.toContain("/privacy");
+    expect(pagesXml).not.toContain("/search");
+    expect((await get("/sitemaps/articles-2.xml")).status).toBe(404);
+
+    const news = await (await get("/news-sitemaps/1.xml")).text();
+    expect(news).toContain('xmlns:news="http://www.google.com/schemas/sitemap-news/0.9"');
+    expect(news).toMatch(/<news:publication_date>\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\+05:30<\/news:publication_date>/);
+    expect(news).toContain("<news:title>What changed in the district reporting calendar</news:title>");
+    expect(news).not.toContain("community-clinic");
+    expect(await (await get("/news-sitemap.xml")).text()).toContain(`${ORIGIN}/news-sitemaps/1.xml`);
+
+    const feed = await get("/feed.xml");
+    expect(feed.headers.get("content-type")).toContain("application/rss+xml");
+    const rss = await feed.text();
+    expect(rss).toContain(`<link>${ORIGIN}/news/district-reporting-calendar</link>`);
+    // A source card links to its origin and is described as a source update.
+    expect(rss).toContain("<link>https://health.example/notices/206</link>");
+    expect(rss).toContain("Source update from State Health Bulletin");
+    // The partner grant covers the website only, so its copy and card stay out of RSS.
+    expect(rss).not.toContain("partner.example");
+    expect(rss).not.toContain("community-clinic");
+    expect((await get("/section/policy/feed.xml")).status).toBe(200);
+    expect((await get("/section/nope/feed.xml")).status).toBe(404);
+  });
+
+  it("drops cached pages as soon as a story is published or retracted through the newsroom", async () => {
+    const token = `cache-${Math.random().toString(36).slice(2)}`;
+    await ctx.db.insert(staffSessions).values({ personId: ctx.seed.people.managingEditor, tokenHash: sha256Hex(token), expiresAt: new Date(Date.now() + 3600_000) });
+    const call = (path: string, method: string, body: unknown) => fetch(base + path, { method, headers: { "Content-Type": "application/json", Cookie: `ihn_session=${token}`, Origin: base }, body: JSON.stringify(body) });
+    // Warm the caches, including a 404 for the address the story will take.
+    expect(await html("/")).not.toContain("Cache test");
+    const created = (await (await call("/api/v1/staff/articles", "POST", { type: "original_brief", slug: "cache-test-story", headline: "Cache test: office hours notice compared", standfirst: "Checks invalidation.", body: [{ type: "paragraph", text: "The notice sets new office hours." }], sectionSlug: "policy", contribution: "local_reporting", contributionNote: "Called the office.", citations: [{ url: "https://health.example/notices/400", label: "Office hours notice", publisherName: "State Health Bulletin", isPrimary: true }] })).json()) as { id: string; version: number };
+    expect((await get("/news/cache-test-story")).status).toBe(404);
+    const act = async (action: string, v: number, extra = {}) => (await (await call(`/api/v1/staff/articles/${created.id}/actions`, "POST", { action, expectedVersion: v, idempotencyKey: `c-${action}-${Math.random()}`, ...extra })).json()) as { version: number };
+    let v = (await act("submit", created.version)).version;
+    v = (await act("approve-editorial", v)).version;
+    v = (await act("publish", v)).version;
+    const visible = async (path: string, text: string, want: boolean) => {
+      for (let i = 0; i < 40; i++) {
+        if ((await html(path)).includes(text) === want) return true;
+        await new Promise((r) => setTimeout(r, 250));
+      }
+      return false;
+    };
+    // Well inside the 60 second target for an approved publish (OPS-01).
+    expect(await visible("/", "Cache test: office hours notice compared", true)).toBe(true);
+    expect((await get("/news/cache-test-story")).status).toBe(200);
+    await act("retract", v, { reason: "Test retraction", publicNote: "Withdrawn in a test." });
+    expect(await visible("/", "Cache test: office hours notice compared", false)).toBe(true);
+    expect(await visible("/news/cache-test-story", "This report has been retracted", true)).toBe(true);
   });
 });

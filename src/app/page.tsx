@@ -3,6 +3,10 @@ import Link from "next/link";
 import { getDb } from "@/db/client";
 import { getLead, listFeed, listSections, listTermsWithContent } from "@/core/reader";
 import { FeedList } from "@/components/Feed";
+import { JsonLd } from "@/components/JsonLd";
+import { homeGraph } from "@/core/jsonld";
+import { cached, TAG_FEED } from "@/lib/cache";
+import { SITE_URL } from "@/lib/site";
 import { isoIst, shortDateTime } from "@/lib/format";
 import { pageMeta } from "@/lib/page";
 import { SITE_NAME, SITE_TAGLINE } from "@/lib/site";
@@ -15,14 +19,14 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function Home() {
   const db = getDb();
   const now = new Date();
-  const lead = await getLead(db, now);
-  const { items, next } = await listFeed(db, now, { limit: 12 });
+  const { lead, items, next } = await cached(["home"], [TAG_FEED], async () => ({ lead: await getLead(db, now), ...(await listFeed(db, now, { limit: 12 })) }));
   const latest = items.filter((i) => i.id !== lead?.id).slice(0, 10);
   const sections = await listSections(db);
   const states = await listTermsWithContent(db, "state", now);
 
   return (
     <>
+      <JsonLd graph={homeGraph({ origin: SITE_URL, name: SITE_NAME })} />
       <h1 className="visually-hidden">{SITE_NAME}</h1>
       <div className="home-top">
         {lead ? (

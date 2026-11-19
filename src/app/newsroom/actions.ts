@@ -18,6 +18,7 @@ import { decideClusterItem } from "@/core/ingest/process";
 import { saveSettings, savePage, setFlag } from "@/core/settings";
 import { addGrant, createSource, setAutomation, sourceAction, type SourceAction } from "@/core/sources";
 import { parseCitations, parseMarkup } from "@/lib/markup";
+import { pump } from "@/lib/pump";
 import { clearSessionCookie, clientKey, requireStaff, SESSION_COOKIE, setSessionCookie } from "@/lib/session";
 import { cookies } from "next/headers";
 
@@ -38,6 +39,8 @@ async function run(back: string, fn: (staff: StaffSession) => Promise<{ to?: str
   try {
     const r = (await fn(staff)) ?? {};
     target = withParam(r.to ?? back, "ok", r.ok ?? "Saved.");
+    // Deliver any publication event this command produced as soon as the response has gone.
+    pump();
   } catch (e) {
     if (!(e instanceof CommandError)) throw e;
     target = withParam(back, "error", describe(e));

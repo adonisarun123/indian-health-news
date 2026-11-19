@@ -1,6 +1,7 @@
 import { getDb } from "@/db/client";
 import { MAX_BODY_BYTES } from "@/core/ingest/contract";
 import { receiveEvent } from "@/core/ingest/receive";
+import { pump } from "@/lib/pump";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -24,6 +25,7 @@ export async function POST(request: Request): Promise<Response> {
       rawBody,
       new Date(),
     );
+    if (result.status === 202) pump();
     return Response.json(result.body, { status: result.status, headers: { "Cache-Control": "no-store", ...result.headers } });
   } catch (e) {
     console.error(JSON.stringify({ msg: "ingest_error", error: e instanceof Error ? e.message : String(e) }));

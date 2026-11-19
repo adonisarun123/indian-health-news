@@ -1,5 +1,6 @@
 import { CommandError } from "@/core/articles";
 import type { StaffSession } from "@/core/auth";
+import { pump } from "./pump";
 import { currentStaff, sameOrigin } from "./session";
 
 /**
@@ -19,7 +20,9 @@ export async function staffApi(request: Request, fn: (staff: StaffSession, body:
     return Response.json({ code: "MALFORMED_JSON", message: "Body is not valid JSON." }, { status: 400, headers });
   }
   try {
-    return Response.json(await fn(staff, body), { status: okStatus, headers });
+    const result = await fn(staff, body);
+    pump();
+    return Response.json(result, { status: okStatus, headers });
   } catch (e) {
     if (!(e instanceof CommandError)) throw e;
     return Response.json({ code: e.code, message: e.message, ...(e.extra.fieldErrors ? { field_errors: e.extra.fieldErrors } : {}), ...(e.extra.currentVersion !== undefined ? { current_version: e.extra.currentVersion } : {}) }, { status: e.status, headers });

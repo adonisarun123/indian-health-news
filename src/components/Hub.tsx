@@ -1,12 +1,12 @@
 import Link from "next/link";
 import type { Db } from "@/db/client";
-import { decodeCursor, encodeCursor, listFeed, type FeedFilter } from "@/core/reader";
+import { type Cursor, decodeCursor, encodeCursor, type FeedItem, listFeed, type FeedFilter } from "@/core/reader";
 import { FeedList, Pager } from "./Feed";
 
 /** A dated listing with keyset pagination, shared by latest, hubs and profiles. */
-export async function Listing({ db, now, basePath, before, filter = {}, empty, pageSize = 20 }: { db: Db; now: Date; basePath: string; before?: string; filter?: FeedFilter; empty: React.ReactNode; pageSize?: number }) {
+export async function Listing({ db, now, basePath, before, filter = {}, empty, pageSize = 20, page }: { db: Db; now: Date; basePath: string; before?: string; filter?: FeedFilter; empty: React.ReactNode; pageSize?: number; page?: { items: FeedItem[]; next: Cursor | null } }) {
   const cursor = decodeCursor(before);
-  const { items, next } = await listFeed(db, now, { ...filter, cursor, limit: pageSize });
+  const { items, next } = page ?? (await listFeed(db, now, { ...filter, cursor, limit: pageSize }));
   if (items.length === 0) return <div className="note">{empty}</div>;
   return (
     <>

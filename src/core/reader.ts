@@ -446,3 +446,55 @@ const TERM_MATCH = sql`
       where to_tsvector('english', t.name) @@ q.tsq and (
         (fe.kind = 'article' and t.id in (select x.term_id from article_terms x where x.article_id = a.id))
         or (fe.kind = 'source_card' and t.id = s.jurisdiction_term_id))) as hit) tm on true`;
+
+/* ───────────── sitemaps (SEO-02) ───────────── */
+
+export const NEWS_WINDOW_MS = 48 * 3600 * 1000;
+
+export interface SitemapArticle {
+  slug: string;
+  title: string;
+  publishedAt: Date;
+  lastmod: Date;
+}
+
+/**
+ * Indexable original stories, oldest first so shard membership is stable.
+ * `since` restricts to stories first published after that instant: a
+ * correction never moves a story back into the news window.
+ */
+export async function listSitemapArticles(db: Db, now: Date, opts: { since?: Date; limit: number; offset: number }): Promise<SitemapArticle[]> {
+  const since = opts.since ? sql`and a.first_published_at > ${iso(opts.since)}` : sql``;
+  const res = await db.execute<Row>(sql`
+    select a.slug, fe.display_title, a.first_published_at, coalesce(a.modified_at, a.first_published_at) as lastmod
+    ${publicFeed(now, "web")}
+      and fe.kind = 'article' and a.is_indexable and a.type in ('original_brief', 'original_report', 'analysis') ${since}
+    order by a.first_published_at asc, a.id asc
+    limit ${opts.limit} offset ${opts.offset}`);
+  return res.rows.map((r) => ({ slug: r.slug as string, title: r.display_title as string, publishedAt: new Date(r.first_published_at as string), lastmod: new Date(r.lastmod as string) }));
+}
+
+export async function countSitemapArticles(db: Db, now: Date, since?: Date): Promise<number> {
+  const cond = since ? sql`and a.first_published_at > ${iso(since)}` : sql``;
+  const res = await db.execute<{ n: string }>(sql`select count(*) as n ${publicFeed(now, "web")} and fe.kind = 'article' and a.is_indexable and a.type in ('original_brief', 'original_report', 'analysis') ${cond}`);
+  return Number(res.rows[0]?.n ?? 0);
+}
+
+/** Hubs that qualify for the index: approved, introduced and with enough original stories. */
+export async function listIndexableHubs(db: Db, now: Date): Promise<{ kind: TermKind; slug: string }[]> {
+  const approved = await db.select().from(terms).where(and(eq(terms.isHubApproved, true)));
+  const out: { kind: TermKind; slug: string }[] = [];
+  for (const t of approved) {
+    if (!t.intro) continue;
+    if ((await countFeed(db, now, { termId: t.id, originalsOnly: true })) >= HUB_MIN_ORIGINALS) out.push({ kind: t.kind, slug: t.slug });
+  }
+  return out;
+}
+
+/** Authors with a published biography and at least one public report. */
+export async function listIndexableAuthors(db: Db, now: Date): Promise<string[]> {
+  const rows = await db.select().from(people).where(and(eq(people.hasPublicProfile, true), eq(people.status, "active")));
+  const out: string[] = [];
+  for (const p of rows) if (p.bio && (await countFeed(db, now, { authorId: p.id })) > 0) out.push(p.slug);
+  return out;
+}

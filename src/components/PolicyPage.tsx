@@ -4,7 +4,10 @@ import { getDb } from "@/db/client";
 import { getPage } from "@/core/settings";
 import { isoIst, longDate } from "@/lib/format";
 import { pageMeta } from "@/lib/page";
+import { simplePageGraph } from "@/core/jsonld";
+import { SITE_NAME, SITE_URL } from "@/lib/site";
 import { ArticleBody } from "./ArticleBody";
+import { JsonLd } from "./JsonLd";
 
 /** A policy page is indexable only when no publisher detail is missing and a reviewer is on record. */
 export async function policyMetadata(slug: string): Promise<Metadata> {
@@ -19,6 +22,7 @@ export async function PolicyPage({ slug }: { slug: string }) {
   if (!page) notFound();
   return (
     <div className="prose">
+      <JsonLd graph={simplePageGraph({ origin: SITE_URL, name: SITE_NAME }, { type: slug === "about" ? "AboutPage" : slug === "contact" ? "ContactPage" : "WebPage", name: page.title, path: `/${slug}` })} />
       <h1 className="page-title">{page.title}</h1>
       {page.missing.length > 0 && (
         <div className="draft-note" role="note">

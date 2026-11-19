@@ -3,7 +3,10 @@ import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
 import { countFeed, getAuthor } from "@/core/reader";
 import { Listing } from "@/components/Hub";
+import { JsonLd } from "@/components/JsonLd";
+import { profileGraph } from "@/core/jsonld";
 import { first, pageMeta } from "@/lib/page";
+import { SITE_NAME, SITE_URL } from "@/lib/site";
 
 type Props = { params: Promise<{ slug: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> };
 
@@ -27,6 +30,7 @@ export default async function AuthorPage({ params, searchParams }: Props) {
   const roles = author.roles.map((r) => ROLE[r]).filter(Boolean);
   return (
     <>
+      <JsonLd graph={profileGraph({ origin: SITE_URL, name: SITE_NAME }, { name: author.name, slug: author.slug, bio: author.bio, jobTitle: roles[0] ?? null, credentials: author.credentials })} />
       <p className="kicker">{roles.join(" · ") || "Staff"}</p>
       <h1 className="page-title">{author.name}</h1>
       <div className="prose">

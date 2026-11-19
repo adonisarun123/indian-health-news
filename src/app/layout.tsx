@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { getDb } from "@/db/client";
 import { getBreaking, listSections, listTermsWithContent } from "@/core/reader";
 import { Tabs } from "@/components/Tabs";
+import { cached, TAG_FEED } from "@/lib/cache";
 import { SITE_NAME, SITE_TAGLINE, SITE_URL } from "@/lib/site";
 import "./globals.css";
 
@@ -16,6 +17,7 @@ export const metadata: Metadata = {
   title: { default: SITE_NAME, template: `%s | ${SITE_NAME}` },
   description: SITE_TAGLINE,
   robots: { index: false, follow: true },
+  alternates: { types: { "application/rss+xml": "/feed.xml" } },
 };
 
 export const viewport: Viewport = { width: "device-width", initialScale: 1, themeColor: "#0a2540" };
@@ -25,7 +27,7 @@ const SHORT: Record<string, string> = { policy: "Policy", "medicines-devices": "
 export default async function RootLayout({ children }: { children: ReactNode }) {
   const db = getDb();
   const now = new Date();
-  const [sections, states, breaking] = [await listSections(db), await listTermsWithContent(db, "state", now), await getBreaking(db, now)];
+  const { sections, states, breaking } = await cached(["layout-nav"], [TAG_FEED], async () => ({ sections: await listSections(db), states: await listTermsWithContent(db, "state", now), breaking: await getBreaking(db, now) }));
   const tabs = [{ href: "/", label: "Latest" }, ...sections.map((s) => ({ href: `/section/${s.slug}`, label: SHORT[s.slug] ?? s.name })), { href: "/states", label: "States" }];
 
   return (

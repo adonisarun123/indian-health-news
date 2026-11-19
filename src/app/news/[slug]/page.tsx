@@ -12,11 +12,14 @@ import { FeedList } from "@/components/Feed";
 import { Share } from "@/components/Share";
 import { isoIst, longDate, longDateTime } from "@/lib/format";
 import { pageMeta } from "@/lib/page";
-import { absolute } from "@/lib/site";
+import { JsonLd } from "@/components/JsonLd";
+import { articleGraph } from "@/core/jsonld";
+import { absolute, SITE_NAME, SITE_URL } from "@/lib/site";
 
 type Props = { params: Promise<{ slug: string }> };
 
 // One lookup per request, shared by metadata and the page.
+// Always read live: a story page is never served from the data cache (ARC-02).
 const load = cache(async (slug: string) => getPublicArticle(getDb(), slug, new Date()));
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -72,8 +75,24 @@ export default async function ArticlePage({ params }: Props) {
     ? (await listFeed(db, now, { termId: ctx.section.id, kind: "article", excludeArticleId: a.id, limit: 4 })).items
     : [];
 
+  const graph = articleGraph(
+    { origin: SITE_URL, name: SITE_NAME },
+    {
+      slug: a.slug,
+      type: a.type,
+      headline: a.headline,
+      section: ctx.section ? { name: ctx.section.name, slug: ctx.section.slug } : null,
+      author: a.author,
+      publishedAt: a.publishedAt,
+      modifiedAt: a.modifiedAt,
+      citations: a.citations.map((c) => c.url),
+      reviewer: ctx.medicalReview ? { name: ctx.medicalReview.name, slug: ctx.medicalReview.slug, hasProfile: ctx.medicalReview.isPublic } : null,
+    },
+  );
+
   return (
     <article className="article">
+      <JsonLd graph={graph} />
       <nav className="breadcrumb" aria-label="Breadcrumb">
         <ol>
           <li>
