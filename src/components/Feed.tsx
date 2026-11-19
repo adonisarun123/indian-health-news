@@ -33,7 +33,7 @@ export function StoryItem({ item, now }: { item: FeedItem; now: Date }) {
   return (
     <article className="item">
       <p className="kicker">
-        {partner ? `Republished from ${item.publisher}` : item.articleType === "press_material" ? "Press material" : item.articleType === "analysis" ? "Analysis" : item.section ? <Link href={`/section/${item.section.slug}`}>{item.section.name}</Link> : "News"}
+        {partner ? `Republished from ${item.publisher}` : item.reproducedFrom ? `Republished from ${item.reproducedFrom}` : item.articleType === "press_material" ? "Press material" : item.articleType === "analysis" ? "Analysis" : item.section ? <Link href={`/section/${item.section.slug}`}>{item.section.name}</Link> : "News"}
       </p>
       <h3>
         <Link href={item.url}>{item.title}</Link>
