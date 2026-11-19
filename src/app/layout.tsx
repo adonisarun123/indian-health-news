@@ -18,7 +18,7 @@ export const metadata: Metadata = {
   robots: { index: false, follow: true },
 };
 
-export const viewport: Viewport = { width: "device-width", initialScale: 1, themeColor: "#17594a" };
+export const viewport: Viewport = { width: "device-width", initialScale: 1, themeColor: "#4a3df0" };
 
 const SHORT: Record<string, string> = { policy: "Policy", "medicines-devices": "Medicines", "healthcare-delivery": "Healthcare", "public-health": "Public Health" };
 
