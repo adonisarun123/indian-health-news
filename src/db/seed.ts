@@ -21,6 +21,7 @@ import {
   terms,
 } from "./schema";
 import { encryptSecret, newProducerSecret } from "@/core/crypto";
+import { seedPolicyPages } from "./seed-pages";
 
 const SECTIONS: [string, string][] = [
   ["public-health", "Public Health"],
@@ -92,6 +93,7 @@ const SYNONYMS: [string, string][] = [
 ];
 
 export async function seedReference(db: Db): Promise<void> {
+  await seedPolicyPages(db, new Date());
   for (const [term, synonym] of SYNONYMS) await db.insert(searchSynonyms).values({ term, synonym }).onConflictDoNothing();
   for (const [slug, name] of SECTIONS) {
     await db.insert(terms).values({ kind: "section", slug, name }).onConflictDoNothing();

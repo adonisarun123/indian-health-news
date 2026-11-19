@@ -5,7 +5,9 @@ import { cache } from "react";
 import { getDb } from "@/db/client";
 import type { Block } from "@/core/articles";
 import { getPublicArticle } from "@/core/public";
+import { linkStatuses } from "@/core/cases";
 import { getArticleContext, listFeed } from "@/core/reader";
+import { ArticleBody as Body } from "@/components/ArticleBody";
 import { FeedList } from "@/components/Feed";
 import { Share } from "@/components/Share";
 import { isoIst, longDate, longDateTime } from "@/lib/format";
@@ -32,34 +34,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     publishedTime: isoIst(a.publishedAt),
     modifiedTime: a.modifiedAt ? isoIst(a.modifiedAt) : undefined,
   });
-}
-
-function Body({ blocks }: { blocks: Block[] }) {
-  return (
-    <div className="body">
-      {blocks.map((b, i) => {
-        if (b.type === "heading") return <h2 key={i}>{b.text}</h2>;
-        if (b.type === "quote")
-          return (
-            <blockquote key={i}>
-              <p>{b.text}</p>
-              {b.attribution && <footer>{b.attribution}</footer>}
-            </blockquote>
-          );
-        if (b.type === "list") {
-          const L = b.ordered ? "ol" : "ul";
-          return (
-            <L key={i}>
-              {b.items.map((item, j) => (
-                <li key={j}>{item}</li>
-              ))}
-            </L>
-          );
-        }
-        return <p key={i}>{b.text}</p>;
-      })}
-    </div>
-  );
 }
 
 const TYPE_LABEL: Record<string, string> = { analysis: "Analysis", press_material: "Press material" };
@@ -93,6 +67,7 @@ export default async function ArticlePage({ params }: Props) {
   const ctx = await getArticleContext(db, a.id, a.publicVersionId);
   const primary = a.citations.find((c) => c.isPrimary) ?? a.citations[0];
   const partner = a.type === "licensed_copy";
+  const links = await linkStatuses(db, a.citations.map((c) => c.url));
   const related = ctx.section
     ? (await listFeed(db, now, { termId: ctx.section.id, kind: "article", excludeArticleId: a.id, limit: 4 })).items
     : [];
@@ -185,6 +160,16 @@ export default async function ArticlePage({ params }: Props) {
                 {c.publisher}
                 {c.isPrimary && " · primary source"}
               </span>
+              {links.get(c.url)?.status === "replaced" && links.get(c.url)!.replacementUrl ? (
+                <span>
+                  This link has moved.{" "}
+                  <a className="ext" href={links.get(c.url)!.replacementUrl!} rel="noopener external">
+                    Open the verified replacement
+                  </a>
+                </span>
+              ) : links.has(c.url) ? (
+                <span>{links.get(c.url)!.status === "broken" ? "This link no longer works. The original citation is kept on record." : "A reader reported this link as broken. We are checking it."}</span>
+              ) : null}
             </li>
           ))}
         </ol>

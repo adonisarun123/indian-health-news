@@ -14,6 +14,7 @@ import {
   clusterItems,
   feedEntries,
   ingestEvents,
+  sourceAutomation,
   sourceItems,
   sourceItemUrls,
   sourceRevisions,
@@ -22,7 +23,9 @@ import {
   suppressions,
 } from "@/db/schema";
 import { audit, emit, openTask } from "../audit";
-import { evaluateCard, publishCard, pullCard } from "../cards";
+import { autoPublishLicensedCopy } from "../articles";
+import { getFlags } from "../audit";
+import { evaluateCard, loadCurrentGrant, publishCard, pullCard } from "../cards";
 import { assessRisk, detectScript, jaccard, titleFingerprint, titleTokens } from "../risk";
 import { normalizeUrl } from "../urls";
 import type { IngestEvent, UpsertEvent, WithdrawEvent } from "./contract";
@@ -97,12 +100,21 @@ async function applyUpsert(
   if (alias && alias.itemId !== item.id) extraHolds.push("URL_ALIAS_CONFLICT");
   else if (!alias) await tx.insert(sourceItemUrls).values({ sourceId: source.id, itemId: item.id, normalizedUrl });
 
+  // Full text is evidence we may hold only under a grant that covers it (SEC-03).
+  const intakeGrant = await loadCurrentGrant(tx, source.id, now);
+  const bodyText = p.body_text && intakeGrant?.allowFullText ? p.body_text : null;
+  if (p.body_text && !bodyText) {
+    const { body_text: _dropped, ...kept } = p;
+    await tx.update(ingestEvents).set({ payload: kept }).where(eq(ingestEvents.id, ingestEventId));
+  }
+
   const [revision] = await tx
     .insert(sourceRevisions)
     .values({
       itemId: item.id,
       revision: p.revision,
       kind: "upsert",
+      bodyText,
       ingestEventId,
       submittedUrl: p.source_url,
       resolvedUrl: p.resolved_url ?? null,
@@ -145,6 +157,19 @@ async function applyUpsert(
   await suggestClusters(tx, source, item.id, revision, now);
 
   if (outcome === "publish" && grant) {
+    // A partner feed switched on for republication publishes the labelled copy instead of a card.
+    if (revision.bodyText && grant.allowFullText) {
+      const flags = await getFlags(tx);
+      const [auto] = await tx.select().from(sourceAutomation).where(and(eq(sourceAutomation.sourceId, source.id), eq(sourceAutomation.format, "licensed_copy")));
+      if (flags.licensed_feeds && auto?.enabled) {
+        const copy = await autoPublishLicensedCopy(tx, { source, item: liveItem, revision, grantId: grant.id }, now);
+        if (copy.ok) {
+          await tx.update(feedEntries).set({ status: "replaced" }).where(and(eq(feedEntries.sourceItemId, item.id), eq(feedEntries.kind, "source_card"), eq(feedEntries.status, "active")));
+          return finish("applied", "COPY_PUBLISHED");
+        }
+        await openTask(tx, { kind: "partner_copy_blocked", subjectType: "source_item", subjectId: item.id, detail: copy.reasons.join(", ") });
+      }
+    }
     await publishCard(tx, source, liveItem, revision, grant, now);
     return finish("applied", "CARD_PUBLISHED");
   }

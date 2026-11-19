@@ -195,7 +195,7 @@ const stricter = (a: RiskRoute, b: RiskRoute): RiskRoute => {
   return rank[a] >= rank[b] ? a : b;
 };
 
-async function writeVersion(tx: Tx, articleId: string, version: number, c: Content, actorId: string, now: Date, extra: { sourceAuthorLabel?: string | null; leadAssetId?: string | null } = {}) {
+async function writeVersion(tx: Tx, articleId: string, version: number, c: Content, actorId: string | null, now: Date, extra: { sourceAuthorLabel?: string | null; leadAssetId?: string | null } = {}) {
   const [row] = await tx
     .insert(articleVersions)
     .values({
@@ -387,7 +387,7 @@ async function credentialOf(tx: Tx, personId: string, now: Date) {
   return rows.find((c) => c.verifiedAt && c.verifiedAt <= now && !c.revokedAt) ?? null;
 }
 
-async function publishErrors(tx: Tx, article: typeof articles.$inferSelect, versionId: string, at: Date): Promise<FieldError[]> {
+async function publishErrors(tx: Tx, article: typeof articles.$inferSelect, versionId: string, at: Date, automated = false): Promise<FieldError[]> {
   const [version] = await tx.select().from(articleVersions).where(eq(articleVersions.id, versionId));
   const cites = await tx.select().from(articleCitations).where(eq(articleCitations.versionId, versionId));
   const signoff = await approvalsFor(tx, versionId);
@@ -425,6 +425,7 @@ async function publishErrors(tx: Tx, article: typeof articles.$inferSelect, vers
     boundGrantId: article.grantId,
     grant,
     licensedFeedsEnabled: flags.licensed_feeds ?? false,
+    automated,
     now: at,
   });
 }
@@ -434,8 +435,8 @@ async function publishErrors(tx: Tx, article: typeof articles.$inferSelect, vers
  * risk, approvals and tombstones are all rechecked here, whatever the caller
  * checked earlier (ING-05).
  */
-async function publishVersion(tx: Tx, article: typeof articles.$inferSelect, versionId: string, actorId: string | null, now: Date, isCorrection: boolean): Promise<void> {
-  const errors = await publishErrors(tx, article, versionId, now);
+async function publishVersion(tx: Tx, article: typeof articles.$inferSelect, versionId: string, actorId: string | null, now: Date, isCorrection: boolean, automated = false): Promise<void> {
+  const errors = await publishErrors(tx, article, versionId, now, automated);
   if (errors.length > 0) throw new CommandError(422, "PUBLISH_BLOCKED", "This version cannot be released yet.", { fieldErrors: errors });
   const [version] = await tx.select().from(articleVersions).where(eq(articleVersions.id, versionId));
   const firstPublishedAt = article.firstPublishedAt ?? now;
@@ -767,5 +768,95 @@ export async function setLead(db: Db, actor: Actor, articleId: string, input: { 
   await db.transaction(async (tx) => {
     await tx.update(articles).set({ leadRank: input.rank, leadUntil: input.until }).where(eq(articles.id, articleId));
     await audit(tx, { actorType: "staff", actorId: actor.personId, action: "article.set_lead", subjectType: "article", subjectId: articleId, reason: input.reason, diff: { rank: input.rank, until: input.until?.toISOString() ?? null } });
+  });
+}
+
+/* ───────────── automatic partner republication ───────────── */
+
+/** Plain text to paragraph blocks. No markup is accepted from a source (SEC-01). */
+export function textToBlocks(text: string): Block[] {
+  return text
+    .replace(/\r\n?/g, "\n")
+    .split(/\n\s*\n/)
+    .map((p) => p.replace(/\s+/g, " ").trim())
+    .filter(Boolean)
+    .flatMap((p) => (p.match(/.{1,4800}(\s|$)/g) ?? [p]).map((t) => ({ type: "paragraph" as const, text: t.trim() })))
+    .slice(0, 400);
+}
+
+/**
+ * Publish or refresh a partner copy without a named editor. The caller has
+ * already checked the automation switches; every rights and risk rule is
+ * checked again inside publishVersion. Returns the article id, or the reasons
+ * the copy could not be released.
+ */
+export async function autoPublishLicensedCopy(
+  tx: Tx,
+  input: { source: typeof sources.$inferSelect; item: typeof sourceItems.$inferSelect; revision: typeof sourceRevisions.$inferSelect; grantId: string },
+  now: Date,
+): Promise<{ ok: true; articleId: string } | { ok: false; reasons: string[] }> {
+  const { source, item, revision } = input;
+  if (!revision.bodyText || !revision.title) return { ok: false, reasons: ["NO_BODY"] };
+  if (!source.defaultSectionSlug) return { ok: false, reasons: ["PARTNER_SECTION_NOT_SET"] };
+  const body = textToBlocks(revision.bodyText);
+  if (body.length === 0) return { ok: false, reasons: ["NO_BODY"] };
+
+  const [existing] = await tx.select().from(articles).where(and(eq(articles.sourceItemId, item.id), eq(articles.type, "licensed_copy"))).for("update");
+  if (existing && (existing.status === "removed" || existing.status === "retracted")) return { ok: false, reasons: ["COPY_WITHDRAWN"] };
+  // A copy an editor prepared by hand is theirs to update.
+  if (existing && !existing.autoPublished) return { ok: false, reasons: ["EDITOR_OWNED_COPY"] };
+
+  const c: Content = {
+    headline: revision.title,
+    standfirst: "",
+    body,
+    language: revision.language ?? "en",
+    authorPersonId: null,
+    citations: [{ url: revision.submittedUrl, label: revision.title, publisherName: source.displayName, isPrimary: true, sourceRevisionId: revision.id }],
+    contribution: null,
+    contributionNote: null,
+    correctionNote: existing?.publicVersionId ? `Updated to match the publisher's revision ${revision.revision}.` : null,
+    assistModel: null,
+    sectionSlug: source.defaultSectionSlug,
+    termSlugs: [],
+  };
+  try {
+    let article = existing;
+    if (!article) {
+      const slug = await uniqueSlug(tx, "en-IN", slugify(revision.title));
+      [article] = await tx
+        .insert(articles)
+        .values({ slug, type: "licensed_copy", riskRoute: revision.riskRoute, sourceItemId: item.id, grantId: input.grantId, isIndexable: false, autoPublished: true, embargoUntil: item.embargoUntil, createdAt: now, updatedAt: now })
+        .returning();
+      await setTerms(tx, article!.id, source.defaultSectionSlug, []);
+    }
+    const latest = await tx.select({ n: articleVersions.version }).from(articleVersions).where(eq(articleVersions.articleId, article!.id)).orderBy(desc(articleVersions.version)).limit(1);
+    const version = await writeVersion(tx, article!.id, (latest[0]?.n ?? 0) + 1, c, null, now, { sourceAuthorLabel: revision.sourceAuthor ?? source.displayName });
+    await tx.update(articles).set({ draftVersionId: version.id, grantId: input.grantId, riskRoute: revision.riskRoute }).where(eq(articles.id, article!.id));
+    const [fresh] = await tx.select().from(articles).where(eq(articles.id, article!.id));
+    await publishVersion(tx, fresh!, version.id, null, now, Boolean(fresh!.publicVersionId), true);
+    await audit(tx, { actorType: "system", action: "article.auto_publish_licensed", subjectType: "article", subjectId: article!.id, diff: { sourceRevision: revision.revision, grantId: input.grantId } });
+    return { ok: true, articleId: article!.id };
+  } catch (e) {
+    if (e instanceof CommandError) return { ok: false, reasons: (e.extra.fieldErrors ?? []).map((f) => f.code) };
+    throw e;
+  }
+}
+
+/* ───────────── newsroom reads ───────────── */
+
+/** Everything the editor screen needs. A reporter can open only their own drafts (ADM-01). */
+export async function getDraft(db: Db, actor: Actor, articleId: string) {
+  return db.transaction(async (tx) => {
+    const [article] = await tx.select().from(articles).where(eq(articles.id, articleId));
+    if (!article?.draftVersionId) throw new CommandError(404, "NOT_FOUND", "No such story.");
+    const staffOnly = has(actor, "editor", "managing_editor", "medical_reviewer", "auditor", "administrator");
+    if (!staffOnly && article.createdBy !== actor.personId) throw new CommandError(403, "FORBIDDEN", "Reporters can open only their own drafts.");
+    const content = await contentOf(tx, article.draftVersionId, article.id);
+    const versions = await tx.select({ id: articleVersions.id, version: articleVersions.version, createdAt: articleVersions.createdAt, createdBy: articleVersions.createdBy }).from(articleVersions).where(eq(articleVersions.articleId, article.id)).orderBy(desc(articleVersions.version));
+    const log = await tx.select().from(approvals).where(eq(approvals.articleId, article.id)).orderBy(asc(approvals.createdAt));
+    const signoff = await approvalsFor(tx, article.draftVersionId);
+    const blockers = article.status === "removed" || article.status === "retracted" ? [] : await publishErrors(tx, article, article.draftVersionId, new Date());
+    return { article, content, versions, approvals: log, signoff, blockers, draftVersion: versions.find((v) => v.id === article.draftVersionId)?.version ?? 0, publicVersion: versions.find((v) => v.id === article.publicVersionId)?.version ?? null };
   });
 }

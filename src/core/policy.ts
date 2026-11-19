@@ -110,6 +110,8 @@ export interface ArticlePublishInput {
   boundGrantId: string | null;
   grant: GrantView | null;
   licensedFeedsEnabled: boolean;
+  /** Released by source automation: a routine partner copy needs no named editor (PUB table). */
+  automated?: boolean;
   now: Date;
 }
 
@@ -138,7 +140,8 @@ export function checkArticlePublish(i: ArticlePublishInput): FieldError[] {
       add("contribution", "CONTRIBUTION_REQUIRED", "Record the original contribution. A new headline or light rewrite is not enough.");
   }
 
-  if (!i.editorialApprover) add("approvals.editorial", "EDITORIAL_APPROVAL_MISSING", "An editor must approve this exact version.");
+  const autoRelease = Boolean(i.automated) && i.type === "licensed_copy" && i.riskRoute === "routine";
+  if (!i.editorialApprover && !autoRelease) add("approvals.editorial", "EDITORIAL_APPROVAL_MISSING", "An editor must approve this exact version.");
   if (i.riskRoute !== "routine") {
     if (!i.medicalApprover) add("approvals.medical", "MEDICAL_APPROVAL_MISSING", "A credentialed medical reviewer must approve this exact version.");
     else {

@@ -48,6 +48,8 @@ export const upsertEvent = z
     source_updated_at: isoWithOffset.optional(),
     source_author: z.string().max(300).optional(),
     excerpt: z.string().max(2000).optional(),
+    /** Plain text only, paragraphs separated by blank lines. Kept only if the grant covers full text. */
+    body_text: z.string().min(1).max(200_000).optional(),
     document_url: httpsUrl.optional(),
     resolved_url: httpsUrl.optional(),
     canonical_url: httpsUrl.optional(),

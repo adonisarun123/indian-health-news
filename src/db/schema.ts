@@ -203,6 +203,8 @@ export const sources = pgTable(
     ownerPersonId: uuid("owner_person_id").references(() => people.id),
     trustTier: integer("trust_tier").notNull().default(3),
     defaultRiskRoute: riskRoute("default_risk_route").notNull().default("routine"),
+    /** Section for automatically republished partner copies. Without it a copy waits for an editor. */
+    defaultSectionSlug: text("default_section_slug"),
     status: sourceStatus("status").notNull().default("proposed"),
     policyVersion: integer("policy_version").notNull().default(1),
     nextPollAt: ts("next_poll_at"),
@@ -404,6 +406,8 @@ export const sourceRevisions = pgTable(
     detectedScript: text("detected_script"),
     sourceAuthor: text("source_author"),
     excerpt: text("excerpt"),
+    /** Full text, stored only when the grant in force at intake covers full text. */
+    bodyText: text("body_text"),
     documentUrl: text("document_url"),
     mediaCandidates: jsonb("media_candidates"),
     sourcePublishedAt: ts("source_published_at"),
@@ -476,6 +480,8 @@ export const articles = pgTable(
     grantId: uuid("grant_id").references(() => sourceGrants.id),
     isIndexable: boolean("is_indexable").notNull().default(false),
     /** Editorial importance for the homepage lead (WEB-01). Higher wins; null means not a lead candidate. */
+    /** Released by source automation rather than a named editor (PUB table, licensed republication). */
+    autoPublished: boolean("auto_published").notNull().default(false),
     leadRank: integer("lead_rank"),
     leadUntil: ts("lead_until"),
     createdBy: uuid("created_by").references(() => people.id),
@@ -821,4 +827,98 @@ export const searchSynonyms = pgTable(
     synonym: text("synonym").notNull(),
   },
   (t) => [primaryKey({ columns: [t.term, t.synonym] }), check("search_synonyms_lower_ck", sql`${t.term} = lower(${t.term}) and ${t.synonym} = lower(${t.synonym})`)],
+);
+
+/* ───────────── staff sign-in (phase 3, SEC-02, ADM-01) ───────────── */
+
+export const staffCredentials = pgTable("staff_credentials", {
+  personId: uuid("person_id").primaryKey().references(() => people.id),
+  passwordHash: text("password_hash"),
+  /** TOTP secret, encrypted at rest. Sign-in is refused until it is confirmed. */
+  totpSecretEnc: text("totp_secret_enc"),
+  totpConfirmedAt: ts("totp_confirmed_at"),
+  /** Last accepted time step, so a code cannot be replayed. */
+  lastTotpStep: integer("last_totp_step").notNull().default(0),
+  failedAttempts: integer("failed_attempts").notNull().default(0),
+  lockedUntil: ts("locked_until"),
+  updatedAt: ts("updated_at").notNull().defaultNow(),
+});
+
+export const staffSessions = pgTable(
+  "staff_sessions",
+  {
+    id: id(),
+    personId: uuid("person_id").notNull().references(() => people.id),
+    tokenHash: text("token_hash").notNull().unique(),
+    userAgent: text("user_agent"),
+    createdAt: createdAt(),
+    expiresAt: ts("expires_at").notNull(),
+    revokedAt: ts("revoked_at"),
+  },
+  (t) => [index("staff_sessions_person_idx").on(t.personId)],
+);
+
+export const staffInvites = pgTable("staff_invites", {
+  id: id(),
+  personId: uuid("person_id").notNull().references(() => people.id),
+  tokenHash: text("token_hash").notNull().unique(),
+  expiresAt: ts("expires_at").notNull(),
+  usedAt: ts("used_at"),
+  createdBy: uuid("created_by").references(() => people.id),
+  createdAt: createdAt(),
+});
+
+/** Fixed-window counters for sign-in attempts and reader reports. */
+export const rateWindows = pgTable(
+  "rate_windows",
+  {
+    bucket: text("bucket").notNull(),
+    windowStart: ts("window_start").notNull(),
+    count: integer("count").notNull().default(0),
+  },
+  (t) => [primaryKey({ columns: [t.bucket, t.windowStart] })],
+);
+
+/* ───────────── publisher settings and policy pages (GOV-01, GOV-02) ───────────── */
+
+/** Publisher facts: legal name, contacts, grievance officer. Changes are audited. */
+export const settings = pgTable("settings", {
+  key: text("key").primaryKey(),
+  value: text("value").notNull(),
+  updatedBy: uuid("updated_by").references(() => people.id),
+  updatedAt: ts("updated_at").notNull().defaultNow(),
+});
+
+/** Versioned policy documents, so staff can show which policy applied on a given date. */
+export const sitePages = pgTable(
+  "site_pages",
+  {
+    id: id(),
+    slug: text("slug").notNull(),
+    version: integer("version").notNull(),
+    title: text("title").notNull(),
+    description: text("description").notNull().default(""),
+    body: jsonb("body").notNull(),
+    /** Set once a qualified person has reviewed this version. Unreviewed pages stay out of the index. */
+    reviewedBy: text("reviewed_by"),
+    changeNote: text("change_note"),
+    createdBy: uuid("created_by").references(() => people.id),
+    effectiveAt: ts("effective_at").notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex("site_pages_slug_version_uq").on(t.slug, t.version)],
+);
+
+/** Verification record for a cited link (COR-02). Citations themselves are immutable. */
+export const linkChecks = pgTable(
+  "link_checks",
+  {
+    id: id(),
+    url: text("url").notNull(),
+    status: text("status").notNull(),
+    replacementUrl: text("replacement_url"),
+    note: text("note"),
+    checkedBy: uuid("checked_by").references(() => people.id),
+    createdAt: createdAt(),
+  },
+  (t) => [index("link_checks_url_idx").on(t.url, t.createdAt), check("link_checks_status_ck", sql`${t.status} in ('reported_broken', 'broken', 'replaced', 'ok')`)],
 );
