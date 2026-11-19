@@ -10,6 +10,7 @@ export const metadata = { title: "Dashboard" };
 const label = (s: string) => s.replaceAll("_", " ").toLowerCase();
 const dayOf = (iso: string) => new Date(`${iso}T12:00:00+05:30`);
 const dayNumber = (iso: string) => String(Number(iso.slice(8)));
+const split = (reports: number, cards: number) => `${reports} ${reports === 1 ? "report" : "reports"} · ${cards} ${cards === 1 ? "card" : "cards"}`;
 
 function Tile({ value, name, href, note, tone }: { value: number; name: string; href?: string; note?: string; tone?: "warn" }) {
   const body = (
@@ -144,10 +145,11 @@ export default async function DashboardPage({ searchParams }: { searchParams: SP
       <section aria-labelledby="dash-numbers">
         <h2 id="dash-numbers">At a glance</h2>
         <div className="dash-tiles">
-          <Tile value={today.reports + today.cards} name="Published today" note={`${today.reports} reports · ${today.cards} cards`} />
+          <Tile value={today.reports + today.cards} name="Published today" note={split(today.reports, today.cards)} />
           <Tile value={week} name="Published, last 7 days" />
-          <Tile value={d.live.reports + d.live.cards} name="Live on the site" note={`${d.live.reports} reports · ${d.live.cards} cards`} />
+          <Tile value={d.live.reports + d.live.cards} name="Live on the site" note={split(d.live.reports, d.live.cards)} />
           <Tile value={d.waiting.total} name="Waiting in the queue" href="/newsroom/queue" />
+          <Tile value={s.draft ?? 0} name="Drafts" href="/newsroom/stories?status=draft" />
           <Tile value={inReview} name="Stories in review" href="/newsroom/stories?status=in_review" />
           <Tile value={d.tasks.total} name="Open tasks" href="/newsroom/queue" tone={d.tasks.urgent ? "warn" : undefined} note={d.tasks.urgent ? `${d.tasks.urgent} urgent` : undefined} />
           <Tile value={d.cases.open + d.cases.inProgress} name="Open reader cases" href="/newsroom/cases" tone={d.cases.urgent ? "warn" : undefined} note={d.cases.urgent ? `${d.cases.urgent} urgent` : undefined} />
