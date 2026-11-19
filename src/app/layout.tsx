@@ -101,6 +101,13 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
             </div>
           </div>
         )}
+        {process.env.DEMO_BANNER === "1" && (
+          <div className="breaking" role="note">
+            <div className="wrap">
+              <strong>Demonstration</strong>This site shows sample content with fictional sources. It is not real news.
+            </div>
+          </div>
+        )}
         <main id="content" className="wrap">
           {children}
         </main>
