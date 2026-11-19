@@ -170,7 +170,7 @@ export async function partnerCopyAction(itemId: string, f: FormData): Promise<ne
 }
 
 export async function taskCloseAction(taskId: string, f: FormData): Promise<never> {
-  return run("/newsroom", async () => {
+  return run("/newsroom/queue", async () => {
     await closeTask(getDb(), taskId, str(f, "status") === "dismissed" ? "dismissed" : "done", new Date());
     return { ok: "Task closed." };
   });

@@ -9,7 +9,8 @@ export default async function DeskLayout({ children }: { children: ReactNode }) 
   return (
     <>
       <nav className="desk-nav" aria-label="Newsroom">
-        <Link href="/newsroom">Queue</Link>
+        <Link href="/newsroom">Dashboard</Link>
+        <Link href="/newsroom/queue">Queue</Link>
         <Link href="/newsroom/stories">Stories</Link>
         <Link href="/newsroom/sources">Sources</Link>
         <Link href="/newsroom/cases">Cases</Link>

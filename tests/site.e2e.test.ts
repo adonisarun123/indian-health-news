@@ -190,7 +190,7 @@ describe("newsroom and staff API (ADM-01, ADM-02, SEC-02, AT-14)", () => {
   const draft = { type: "original_brief", headline: "Private newsroom draft about tender dates", standfirst: "Not for readers yet.", body: [{ type: "paragraph", text: "Working text about the tender calendar." }], sectionSlug: "policy", contribution: "local_reporting", contributionNote: "Spoke to the tender office.", citations: [{ url: "https://health.example/notices/300", label: "Tender notice", publisherName: "State Health Bulletin", isPrimary: true }] };
 
   it("keeps the newsroom and previews behind sign-in, uncached and unindexed", async () => {
-    for (const path of ["/newsroom", "/newsroom/stories", "/newsroom/settings", "/newsroom/stories/00000000-0000-0000-0000-000000000000/preview"]) {
+    for (const path of ["/newsroom", "/newsroom/queue", "/newsroom/stories", "/newsroom/settings", "/newsroom/stories/00000000-0000-0000-0000-000000000000/preview"]) {
       const res = await get(path);
       expect(res.status, path).toBe(307);
       expect(res.headers.get("location")).toBe("/newsroom/login");

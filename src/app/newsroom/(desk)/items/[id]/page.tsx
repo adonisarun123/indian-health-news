@@ -24,7 +24,7 @@ export default async function Item({ params, searchParams }: { params: Promise<{
   return (
     <>
       <p className="breadcrumb">
-        <Link href="/newsroom">Queue</Link>
+        <Link href="/newsroom/queue">Queue</Link>
       </p>
       <h1>{cur.title ?? item.externalId}</h1>
       <Flash searchParams={searchParams} />
