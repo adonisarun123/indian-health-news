@@ -732,3 +732,40 @@ export async function sweepArticleRights(db: Db, now: Date): Promise<number> {
   }
   return suppressed;
 }
+
+/* ───────────── moved slugs and homepage placement ───────────── */
+
+/**
+ * Move a story to a new address (SEO-01). The old slug becomes a redirect
+ * that points at the article itself, so every former address is one hop away
+ * however many times the story moves.
+ */
+export async function renameSlug(db: Db, actor: Actor, articleId: string, input: { expectedVersion: number; slug: string; reason: string }, now: Date): Promise<CommandResult> {
+  if (!has(actor, "editor", "managing_editor")) throw new CommandError(403, "FORBIDDEN", "Only an editor can move a story.");
+  if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(input.slug) || input.slug.length > 120) throw new CommandError(422, "VALIDATION_FAILED", "Invalid slug.", { fieldErrors: [{ field: "slug", code: "INVALID", message: "Use lowercase words separated by hyphens." }] });
+  if (!input.reason) throw new CommandError(422, "VALIDATION_FAILED", "A reason is required.", { fieldErrors: [{ field: "reason", code: "REQUIRED", message: "Record why the address must change." }] });
+  return db.transaction(async (tx) => {
+    const a = await lockArticle(tx, articleId, input.expectedVersion);
+    if (a.slug === input.slug) return resultOf(tx, a.id);
+    const [clash] = await tx.select({ id: articles.id }).from(articles).where(and(eq(articles.locale, a.locale), eq(articles.slug, input.slug)));
+    const [reserved] = await tx.select().from(redirects).where(and(eq(redirects.locale, a.locale), eq(redirects.fromSlug, input.slug)));
+    if (clash || (reserved && reserved.articleId !== a.id)) throw new CommandError(409, "SLUG_TAKEN", "That address is in use or reserved by a former address.", { currentVersion: a.lockVersion });
+    // Moving back to a former address of the same story frees that redirect.
+    if (reserved) await tx.delete(redirects).where(eq(redirects.id, reserved.id));
+    await tx.insert(redirects).values({ locale: a.locale, fromSlug: a.slug, articleId: a.id, createdAt: now });
+    await tx.update(articles).set({ slug: input.slug, lockVersion: a.lockVersion + 1, updatedAt: now }).where(eq(articles.id, a.id));
+    await tx.update(feedEntries).set({ targetUrl: `/news/${input.slug}` }).where(eq(feedEntries.articleId, a.id));
+    if (a.publicVersionId) await emit(tx, { eventType: "article.moved", aggregateType: "article", aggregateId: a.id, payload: { from: a.slug, slug: input.slug } });
+    await audit(tx, { actorType: "staff", actorId: actor.personId, action: "article.move", subjectType: "article", subjectId: a.id, reason: input.reason, diff: { from: a.slug, to: input.slug } });
+    return resultOf(tx, a.id);
+  });
+}
+
+/** Set or clear a story's homepage lead placement (WEB-01). */
+export async function setLead(db: Db, actor: Actor, articleId: string, input: { rank: number | null; until: Date | null; reason: string }): Promise<void> {
+  if (!has(actor, "editor", "managing_editor")) throw new CommandError(403, "FORBIDDEN", "Only an editor can choose the lead.");
+  await db.transaction(async (tx) => {
+    await tx.update(articles).set({ leadRank: input.rank, leadUntil: input.until }).where(eq(articles.id, articleId));
+    await audit(tx, { actorType: "staff", actorId: actor.personId, action: "article.set_lead", subjectType: "article", subjectId: articleId, reason: input.reason, diff: { rank: input.rank, until: input.until?.toISOString() ?? null } });
+  });
+}

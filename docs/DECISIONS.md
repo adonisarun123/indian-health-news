@@ -1,14 +1,14 @@
 # Build log and decisions
 
 Source of truth: `India_Health_News_SRS` v1.0, 19 November 2026.
-Last updated: 19 November 2026, end of phase 1.
+Last updated: 19 November 2026, end of phase 2.
 
 ## Phases
 
 | Phase | Scope | State |
 |---|---|---|
 | 1 | Schema, signed ingest API, worker, publishing policy, editorial commands, AT-01 to AT-06 | Done |
-| 2 | Public site: home, latest, article, source cards, hubs, search (WEB, UX) | Not started |
+| 2 | Public site: home, latest, article, source cards, hubs, profiles, search (WEB, UX) | Done |
 | 3 | Newsroom: staff sign-in with MFA, queues, editor, approvals UI, source and rights registers, staff HTTP routes (ED, ADM) | Not started |
 | 4 | JSON-LD, sitemaps, news sitemap, RSS, cache invalidation and purge (SEO, SD, ARC-02) | Not started |
 | 5 | Security checks, AT-07 to AT-16, deploy to Vercel and a worker host (SEC, OPS) | Not started |
@@ -33,11 +33,61 @@ Last updated: 19 November 2026, end of phase 1.
 - Job queue per ING-04 and outbox per ARC-01 with replay protection.
 - 21 passing tests, including AT-01 to AT-06.
 
+## What phase 2 delivers
+
+- Reader pages, server-rendered and usable with scripts blocked: `/`, `/latest`,
+  `/news/{slug}`, `/section/{slug}`, `/state/{slug}`, `/topic/{slug}`, `/states`,
+  `/authors/{slug}`, `/sources/{slug}`, `/search`, `/corrections` and the policy
+  pages.
+- One SQL definition of "public" (`src/core/reader.ts`) used by every listing,
+  hub, profile and search. Suppression and rights are checked on each read.
+- Source cards that name the publisher and link straight to it; articles with
+  breadcrumb, byline, IST times, primary source above the body, full source
+  list, correction note, medical reviewer line and related reports.
+- Search over headline, standfirst, body, publisher and taxonomy names, with
+  headline matches ranked above body matches, registered spellings (Bangalore
+  and Bengaluru), state, section and source filters, and a national fallback
+  when a state has little coverage.
+- Keyset pagination with stable links on listings; moved addresses redirect in
+  one hop; removed stories answer 410 or 451 from `src/proxy.ts`.
+- Index policy per page type, gated by the `indexing` rollout flag (off).
+- Mobile-first styles from 320 px, a second column at 768 px, lead plus rail at
+  1024 px. System fonts, no web-font download.
+- 42 passing tests: 32 in `npm test`, 10 over HTTP in `npm run test:site`.
+
+Checked in a headless browser on 13 pages at 320, 360, 390, 768 and 1280 px: no
+horizontal overflow, one `h1` per page, every primary control at least 44 px
+tall. Article page JavaScript is 136 KiB compressed for modern browsers against
+the 170 KiB budget (OPS-02), measured on a local production build.
+
+### Phase 2 decisions and gaps
+
+1. **Pages render per request. Nothing is cached yet.** Correct but not fast:
+   the TTFB target (OPS-01) is unmeasured and will not hold under load until the
+   cache and invalidation work in phase 4.
+2. **Policy pages are placeholders and stay noindex.** About, editorial policy,
+   contact, complaints, privacy and terms list what the publisher must supply.
+   The editorial-policy page states only rules the system actually enforces.
+3. **No reader report form yet** (COR-01). Articles link to `/corrections`,
+   which has no working channel until the publisher supplies a contact and the
+   cases queue exists (phase 3).
+4. **No images.** Every layout is text-led until the media pipeline exists.
+5. **Search uses numbered pages capped at 50**, not a cursor. Accent folding is
+   applied to the query only, not the index.
+6. **A hub is indexable only with an editor's introduction, explicit approval
+   and five original stories.** Empty topic hubs return 404. States without
+   coverage are listed as text, not linked.
+7. **Homepage lead** is the highest `lead_rank`, else the newest original
+   report. The breaking strip has a table and renders, with no newsroom control
+   until phase 3.
+8. **Not verified:** screen readers (TalkBack, VoiceOver), 200% zoom, reduced
+   motion, the five-reader usability gate (UX-05), field Web Vitals, analytics
+   events (OPS-04). These are phase 5 or need people.
+
 ## Deferred out of phase 1
 
 - **Staff HTTP routes** (`/api/v1/staff/...`). The commands exist and are tested;
   they are not exposed over HTTP until staff sign-in exists in phase 3.
-- **Full-text search index** (DB-02 GIN index). Phase 2, with search.
 - **Media pipeline.** Tables exist. No upload, renditions or delivery yet.
 - **Outbox delivery targets.** Events fan out to named targets and are logged.
   Real cache invalidation, purge, RSS and sitemap rebuilds arrive in phase 4.

@@ -5,76 +5,18 @@
  * re-checks rights on each read, so an expired grant or a removal takes
  * effect even if a sweep or cache purge is late. Drafts are unreachable here.
  */
-import { and, asc, desc, eq, lt, lte, or } from "drizzle-orm";
+import { and, asc, eq } from "drizzle-orm";
 import type { Db } from "@/db/client";
-import { articleCitations, articles, articleVersions, feedEntries, people, redirects, sourceItems, sources } from "@/db/schema";
+import { articleCitations, articles, articleVersions, people, redirects, sourceItems, sources } from "@/db/schema";
 import { activeSuppression } from "./audit";
 import { loadCurrentGrant } from "./cards";
+import { type FeedItem, listFeed } from "./reader";
 
-export interface PublicFeedItem {
-  id: string;
-  kind: "source_card" | "article";
-  title: string;
-  publisher: string;
-  /** External publisher URL for a card; local path for an article. */
-  url: string;
-  visibleFrom: Date;
-  isExternal: boolean;
-}
+export type PublicFeedItem = FeedItem;
 
-export async function listPublicFeed(
-  db: Db,
-  now: Date,
-  opts: { limit?: number; cursor?: { visibleFrom: Date; id: string }; channel?: string } = {},
-): Promise<PublicFeedItem[]> {
-  const limit = opts.limit ?? 20;
-  const channel = opts.channel ?? "web";
-  const out: PublicFeedItem[] = [];
-  const grantCache = new Map<string, boolean>();
-  const sourceOk = async (sourceId: string) => {
-    if (!grantCache.has(sourceId)) {
-      const [s] = await db.select().from(sources).where(eq(sources.id, sourceId));
-      const grant = s && s.status !== "revoked" ? await loadCurrentGrant(db, sourceId, now) : null;
-      grantCache.set(sourceId, Boolean(grant?.channels.includes(channel)));
-    }
-    return grantCache.get(sourceId)!;
-  };
-
-  let cursor = opts.cursor;
-  while (out.length < limit) {
-    const page = await db
-      .select()
-      .from(feedEntries)
-      .where(
-        and(
-          eq(feedEntries.status, "active"),
-          lte(feedEntries.visibleFrom, now),
-          cursor ? or(lt(feedEntries.visibleFrom, cursor.visibleFrom), and(eq(feedEntries.visibleFrom, cursor.visibleFrom), lt(feedEntries.id, cursor.id))) : undefined,
-        ),
-      )
-      .orderBy(desc(feedEntries.visibleFrom), desc(feedEntries.id))
-      .limit(limit * 2);
-    if (page.length === 0) break;
-    for (const e of page) {
-      cursor = { visibleFrom: e.visibleFrom, id: e.id };
-      if (!e.scope.includes(channel)) continue;
-      if (e.kind === "source_card") {
-        const [item] = await db.select().from(sourceItems).where(eq(sourceItems.id, e.sourceItemId!));
-        if (!item || item.status !== "active") continue;
-        if (await activeSuppression(db, "source_item", item.id)) continue;
-        if (!(await sourceOk(item.sourceId))) continue;
-      } else {
-        const [a] = await db.select().from(articles).where(eq(articles.id, e.articleId!));
-        if (!a?.publicVersionId) continue;
-        if (await activeSuppression(db, "article", a.id)) continue;
-        if (a.type === "licensed_copy" && !(await licensedRightsOk(db, a, now))) continue;
-      }
-      out.push({ id: e.id, kind: e.kind, title: e.displayTitle, publisher: e.publisherName, url: e.targetUrl, visibleFrom: e.visibleFrom, isExternal: e.kind === "source_card" });
-      if (out.length >= limit) break;
-    }
-    if (page.length < limit * 2) break;
-  }
-  return out;
+/** Kept for callers that only need the items. See `listFeed` for pagination and filters. */
+export async function listPublicFeed(db: Db, now: Date, opts: { limit?: number; cursor?: { visibleFrom: Date; id: string }; channel?: string } = {}): Promise<PublicFeedItem[]> {
+  return (await listFeed(db, now, opts)).items;
 }
 
 async function licensedRightsOk(db: Db, a: typeof articles.$inferSelect, now: Date): Promise<boolean> {
@@ -94,13 +36,14 @@ export type PublicArticleResult =
 
 export interface PublicArticle {
   id: string;
+  publicVersionId: string;
   slug: string;
   type: (typeof articles.$inferSelect)["type"];
   headline: string;
   standfirst: string;
   body: unknown;
   language: string;
-  author: { name: string; slug: string } | null;
+  author: { name: string; slug: string; hasProfile: boolean } | null;
   sourceAuthorLabel: string | null;
   publishedAt: Date;
   modifiedAt: Date | null;
@@ -140,13 +83,14 @@ export async function getPublicArticle(db: Db, slug: string, now: Date, locale =
     kind: "ok",
     article: {
       id: a.id,
+      publicVersionId: a.publicVersionId,
       slug: a.slug,
       type: a.type,
       headline: v!.headline,
       standfirst: v!.standfirst,
       body: v!.body,
       language: v!.language,
-      author: author ? { name: author.displayName, slug: author.slug } : null,
+      author: author ? { name: author.displayName, slug: author.slug, hasProfile: author.hasPublicProfile && author.status === "active" } : null,
       sourceAuthorLabel: v!.sourceAuthorLabel,
       publishedAt: a.firstPublishedAt,
       modifiedAt: a.modifiedAt,

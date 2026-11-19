@@ -1,15 +1,130 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
+import Link from "next/link";
 import type { ReactNode } from "react";
+import { getDb } from "@/db/client";
+import { getBreaking, listSections, listTermsWithContent } from "@/core/reader";
+import { Tabs } from "@/components/Tabs";
+import { SITE_NAME, SITE_TAGLINE, SITE_URL } from "@/lib/site";
+import "./globals.css";
+
+// Every public page reads the published projection per request. Caching with
+// explicit invalidation arrives with the distribution work (ARC-02).
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "India Health News",
-  robots: { index: false, follow: false },
+  metadataBase: new URL(SITE_URL),
+  title: { default: SITE_NAME, template: `%s | ${SITE_NAME}` },
+  description: SITE_TAGLINE,
+  robots: { index: false, follow: true },
 };
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export const viewport: Viewport = { width: "device-width", initialScale: 1, themeColor: "#17594a" };
+
+const SHORT: Record<string, string> = { policy: "Policy", "medicines-devices": "Medicines", "healthcare-delivery": "Healthcare", "public-health": "Public Health" };
+
+export default async function RootLayout({ children }: { children: ReactNode }) {
+  const db = getDb();
+  const now = new Date();
+  const [sections, states, breaking] = [await listSections(db), await listTermsWithContent(db, "state", now), await getBreaking(db, now)];
+  const tabs = [{ href: "/", label: "Latest" }, ...sections.map((s) => ({ href: `/section/${s.slug}`, label: SHORT[s.slug] ?? s.name })), { href: "/states", label: "States" }];
+
   return (
     <html lang="en-IN">
-      <body>{children}</body>
+      <body>
+        <a className="skip-link" href="#content">
+          Skip to content
+        </a>
+        <header className="masthead">
+          <div className="wrap masthead-bar">
+            <details className="menu">
+              <summary className="icon-button" aria-label="Menu">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+                  <path d="M4 7h16M4 12h16M4 17h16" />
+                </svg>
+              </summary>
+              <nav className="menu-panel" aria-label="All sections and states">
+                <h2>Sections</h2>
+                <ul>
+                  <li>
+                    <Link href="/latest">Latest updates</Link>
+                  </li>
+                  {sections.map((s) => (
+                    <li key={s.slug}>
+                      <Link href={`/section/${s.slug}`}>{s.name}</Link>
+                    </li>
+                  ))}
+                </ul>
+                <h2>States and union territories</h2>
+                <ul>
+                  {states.map((s) => (
+                    <li key={s.slug}>
+                      <Link href={`/state/${s.slug}`}>{s.name}</Link>
+                    </li>
+                  ))}
+                  <li>
+                    <Link href="/states">All states and union territories</Link>
+                  </li>
+                </ul>
+                <h2>More</h2>
+                <ul>
+                  <li>
+                    <Link href="/search">Search</Link>
+                  </li>
+                  <li>
+                    <Link href="/about">About</Link>
+                  </li>
+                  <li>
+                    <Link href="/corrections">Corrections</Link>
+                  </li>
+                </ul>
+              </nav>
+            </details>
+            <Link className="masthead-title" href="/">
+              {SITE_NAME}
+            </Link>
+            <Link className="icon-button" href="/search" aria-label="Search">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+                <circle cx="10.5" cy="10.5" r="6" />
+                <path d="M15 15l5.5 5.5" />
+              </svg>
+            </Link>
+          </div>
+        </header>
+        <Tabs items={tabs} />
+        {breaking && (
+          <div className="breaking" role="region" aria-label="Breaking news">
+            <div className="wrap">
+              <strong>Breaking</strong>
+              <Link href={breaking.url}>{breaking.text}</Link>
+            </div>
+          </div>
+        )}
+        <main id="content" className="wrap">
+          {children}
+        </main>
+        <footer className="footer">
+          <div className="wrap">
+            <nav aria-label="About this publication">
+              <ul>
+                {[
+                  ["/about", "About"],
+                  ["/editorial-policy", "Editorial policy"],
+                  ["/corrections", "Corrections"],
+                  ["/contact", "Contact"],
+                  ["/complaints", "Complaints"],
+                  ["/privacy", "Privacy"],
+                  ["/terms", "Terms"],
+                ].map(([href, label]) => (
+                  <li key={href}>
+                    <Link href={href!}>{label}</Link>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+            <p>{SITE_NAME}. All times are Indian Standard Time. Source updates link to the original publisher.</p>
+          </div>
+        </footer>
+      </body>
     </html>
   );
 }

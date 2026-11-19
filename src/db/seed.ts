@@ -12,6 +12,7 @@ import {
   producerSecrets,
   producerSources,
   reviewerCredentials,
+  searchSynonyms,
   sourceAutomation,
   sourceGrants,
   sourceHosts,
@@ -69,7 +70,29 @@ const STATES: [string, string, string[]?][] = [
   ["puducherry", "Puducherry", ["Pondicherry"]],
 ];
 
+/** Renamed places and common spellings. Search treats each pair as the same word. */
+const SYNONYMS: [string, string][] = [
+  ["bengaluru", "bangalore"],
+  ["mumbai", "bombay"],
+  ["kolkata", "calcutta"],
+  ["chennai", "madras"],
+  ["thiruvananthapuram", "trivandrum"],
+  ["kochi", "cochin"],
+  ["pune", "poona"],
+  ["varanasi", "benares"],
+  ["mysuru", "mysore"],
+  ["mangaluru", "mangalore"],
+  ["gurugram", "gurgaon"],
+  ["prayagraj", "allahabad"],
+  ["vadodara", "baroda"],
+  ["puducherry", "pondicherry"],
+  ["odisha", "orissa"],
+  ["tb", "tuberculosis"],
+  ["covid", "coronavirus"],
+];
+
 export async function seedReference(db: Db): Promise<void> {
+  for (const [term, synonym] of SYNONYMS) await db.insert(searchSynonyms).values({ term, synonym }).onConflictDoNothing();
   for (const [slug, name] of SECTIONS) {
     await db.insert(terms).values({ kind: "section", slug, name }).onConflictDoNothing();
   }
@@ -160,5 +183,36 @@ export async function seedDemo(db: Db, now: Date): Promise<DemoSeed> {
       a: await producer("demo-producer-a", "Demo producer A", [bulletin, bulletinKerala, unknownGrant]),
       b: await producer("demo-producer-b", "Demo producer B", [partner]),
     },
+  };
+}
+
+/**
+ * Rebuild the demo handles from a database that already holds the demo seed,
+ * so demo content can be added later. Producer secrets come from the caller
+ * because they are stored encrypted.
+ */
+export async function loadDemoSeed(db: Db, secrets: { a: string; b: string }): Promise<DemoSeed> {
+  const personId = async (slug: string) => {
+    const [p] = await db.select().from(people).where(eq(people.slug, slug));
+    if (!p) throw new Error(`Demo person ${slug} not found. Run the demo seed first.`);
+    return p.id;
+  };
+  const sourceId = async (slug: string) => {
+    const [s] = await db.select().from(sources).where(eq(sources.slug, slug));
+    if (!s) throw new Error(`Demo source ${slug} not found. Run the demo seed first.`);
+    return s.id;
+  };
+  const grantId = async (source: string) => (await db.select().from(sourceGrants).where(eq(sourceGrants.sourceId, source)))[0]!.id;
+  const producer = async (keyId: string, secret: string) => {
+    const [p] = await db.select().from(producers).where(eq(producers.keyId, keyId));
+    if (!p) throw new Error(`Demo producer ${keyId} not found. Run the demo seed first.`);
+    return { id: p.id, keyId, secret };
+  };
+  const src = { bulletin: await sourceId("state-bulletin-demo"), bulletinKerala: await sourceId("kerala-bulletin-demo"), unknownGrant: await sourceId("unknown-grant-demo"), partner: await sourceId("partner-demo") };
+  return {
+    people: { reporter: await personId("mira"), editor: await personId("demo-editor"), editor2: await personId("demo-editor-two"), managingEditor: await personId("demo-managing-editor"), reviewer: await personId("demo-reviewer"), admin: await personId("demo-admin") },
+    sources: src,
+    grants: { partner: await grantId(src.partner), bulletin: await grantId(src.bulletin) },
+    producers: { a: await producer("demo-producer-a", secrets.a), b: await producer("demo-producer-b", secrets.b) },
   };
 }

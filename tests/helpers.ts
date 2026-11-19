@@ -15,6 +15,8 @@ export const at = (minutes: number) => new Date(T0.getTime() + minutes * 60_000)
 
 export interface Ctx {
   db: Db;
+  /** Connection string of this test's own database. */
+  url: string;
   seed: DemoSeed;
   delivered: { target: string; event: OutboxEvent }[];
   distributor: Distributor;
@@ -35,6 +37,7 @@ export async function createCtx(): Promise<Ctx> {
   const delivered: Ctx["delivered"] = [];
   return {
     db,
+    url: urlFor(name),
     seed,
     delivered,
     distributor: { deliver: async (target, event) => void delivered.push({ target, event }) },

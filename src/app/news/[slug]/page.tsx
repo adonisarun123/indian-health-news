@@ -1,0 +1,209 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import { notFound, permanentRedirect } from "next/navigation";
+import { cache } from "react";
+import { getDb } from "@/db/client";
+import type { Block } from "@/core/articles";
+import { getPublicArticle } from "@/core/public";
+import { getArticleContext, listFeed } from "@/core/reader";
+import { FeedList } from "@/components/Feed";
+import { Share } from "@/components/Share";
+import { isoIst, longDate, longDateTime } from "@/lib/format";
+import { pageMeta } from "@/lib/page";
+import { absolute } from "@/lib/site";
+
+type Props = { params: Promise<{ slug: string }> };
+
+// One lookup per request, shared by metadata and the page.
+const load = cache(async (slug: string) => getPublicArticle(getDb(), slug, new Date()));
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { slug } = await params;
+  const r = await load(slug);
+  if (r.kind === "retracted") return pageMeta({ title: "Retracted report", description: "This report has been retracted.", path: `/news/${r.slug}`, indexable: false });
+  if (r.kind !== "ok") return {};
+  const a = r.article;
+  return pageMeta({
+    title: a.headline,
+    description: a.standfirst || `${a.headline}. Read the report and open the original source.`,
+    path: `/news/${a.slug}`,
+    indexable: a.robots === "index",
+    type: "article",
+    publishedTime: isoIst(a.publishedAt),
+    modifiedTime: a.modifiedAt ? isoIst(a.modifiedAt) : undefined,
+  });
+}
+
+function Body({ blocks }: { blocks: Block[] }) {
+  return (
+    <div className="body">
+      {blocks.map((b, i) => {
+        if (b.type === "heading") return <h2 key={i}>{b.text}</h2>;
+        if (b.type === "quote")
+          return (
+            <blockquote key={i}>
+              <p>{b.text}</p>
+              {b.attribution && <footer>{b.attribution}</footer>}
+            </blockquote>
+          );
+        if (b.type === "list") {
+          const L = b.ordered ? "ol" : "ul";
+          return (
+            <L key={i}>
+              {b.items.map((item, j) => (
+                <li key={j}>{item}</li>
+              ))}
+            </L>
+          );
+        }
+        return <p key={i}>{b.text}</p>;
+      })}
+    </div>
+  );
+}
+
+const TYPE_LABEL: Record<string, string> = { analysis: "Analysis", press_material: "Press material" };
+
+export default async function ArticlePage({ params }: Props) {
+  const { slug } = await params;
+  const r = await load(slug);
+  // A moved story answers with a single permanent redirect (SEO-01).
+  if (r.kind === "redirect") permanentRedirect(`/news/${r.slug}`);
+  if (r.kind === "retracted") {
+    return (
+      <article className="article">
+        <h1>This report has been retracted</h1>
+        <div className="retraction">
+          <p>
+            <strong>Retracted on {longDate(r.date)}.</strong> {r.note ?? "The report has been withdrawn."}
+          </p>
+        </div>
+        <p>
+          See our <Link href="/corrections">corrections</Link> or return to the <Link href="/latest">latest updates</Link>.
+        </p>
+      </article>
+    );
+  }
+  // Removed stories are answered with 410 or 451 before rendering (see proxy.ts).
+  if (r.kind !== "ok") notFound();
+
+  const a = r.article;
+  const db = getDb();
+  const now = new Date();
+  const ctx = await getArticleContext(db, a.id, a.publicVersionId);
+  const primary = a.citations.find((c) => c.isPrimary) ?? a.citations[0];
+  const partner = a.type === "licensed_copy";
+  const related = ctx.section
+    ? (await listFeed(db, now, { termId: ctx.section.id, kind: "article", excludeArticleId: a.id, limit: 4 })).items
+    : [];
+
+  return (
+    <article className="article">
+      <nav className="breadcrumb" aria-label="Breadcrumb">
+        <ol>
+          <li>
+            <Link href="/">Home</Link>
+          </li>
+          {ctx.section && (
+            <li>
+              <Link href={`/section/${ctx.section.slug}`}>{ctx.section.name}</Link>
+            </li>
+          )}
+        </ol>
+      </nav>
+
+      {partner && <p className="label-strip">Republished from {primary?.publisher}</p>}
+      {TYPE_LABEL[a.type] && <p className="label-strip">{TYPE_LABEL[a.type]}</p>}
+      <p className="kicker">
+        {ctx.section && <Link href={`/section/${ctx.section.slug}`}>{ctx.section.name}</Link>}
+        {ctx.states.map((s) => (
+          <span key={s.slug}>
+            {" · "}
+            <Link href={`/state/${s.slug}`}>{s.name}</Link>
+          </span>
+        ))}
+      </p>
+      <h1>{a.headline}</h1>
+      {a.standfirst && <p className="standfirst">{a.standfirst}</p>}
+
+      <p className="byline">
+        {partner ? (
+          <>By {a.sourceAuthorLabel && a.sourceAuthorLabel !== primary?.publisher ? `${a.sourceAuthorLabel}, ${primary?.publisher}` : primary?.publisher}</>
+        ) : a.author ? (
+          <>By {a.author.hasProfile ? <Link href={`/authors/${a.author.slug}`}>{a.author.name}</Link> : a.author.name}</>
+        ) : (
+          "By the Health Desk"
+        )}
+      </p>
+      <p className="meta">
+        Published <time dateTime={isoIst(a.publishedAt)}>{longDateTime(a.publishedAt)}</time>
+        {a.modifiedAt && (
+          <>
+            <br />
+            Updated <time dateTime={isoIst(a.modifiedAt)}>{longDateTime(a.modifiedAt)}</time>
+          </>
+        )}
+      </p>
+      {ctx.medicalReview && (
+        <p className="meta">
+          Medically reviewed by {ctx.medicalReview.isPublic ? <Link href={`/authors/${ctx.medicalReview.slug}`}>{ctx.medicalReview.name}</Link> : ctx.medicalReview.name}
+          {ctx.medicalReview.specialty && <>, {ctx.medicalReview.specialty}</>}
+        </p>
+      )}
+
+      {primary && (
+        <aside className="primary-source" aria-label="Primary source">
+          <p className="kicker">Primary source · {primary.publisher}</p>
+          <a className="open ext" href={primary.url} rel="noopener external">
+            Open original source
+            <span className="visually-hidden">
+              : {primary.label} at {primary.publisher}
+            </span>
+          </a>
+        </aside>
+      )}
+
+      <Body blocks={a.body as Block[]} />
+
+      {a.correctionNote && a.modifiedAt && (
+        <aside className="correction" aria-label="Correction">
+          <strong>Correction, {longDate(a.modifiedAt)}:</strong> {a.correctionNote}
+        </aside>
+      )}
+
+      <section className="sources" aria-labelledby="sources-heading">
+        <h2 id="sources-heading" className="section-title">
+          Sources
+        </h2>
+        <ol>
+          {a.citations.map((c) => (
+            <li key={c.url}>
+              <a className="ext" href={c.url} rel="noopener external">
+                {c.label}
+              </a>
+              <span>
+                {c.publisher}
+                {c.isPrimary && " · primary source"}
+              </span>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      <Share url={absolute(`/news/${a.slug}`)} title={a.headline} />
+
+      <p className="meta" style={{ marginTop: "1.5rem" }}>
+        Spotted an error? <Link href={`/corrections?story=${a.slug}#report`}>Report a correction</Link> or <Link href="/contact">contact the desk</Link>.
+      </p>
+
+      {related.length > 0 && (
+        <section aria-labelledby="related-heading">
+          <h2 id="related-heading" className="section-title">
+            Related reports
+          </h2>
+          <FeedList items={related} now={now} />
+        </section>
+      )}
+    </article>
+  );
+}

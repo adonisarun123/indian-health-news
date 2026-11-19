@@ -9,6 +9,7 @@ import { sql } from "drizzle-orm";
 import {
   boolean,
   check,
+  customType,
   index,
   integer,
   jsonb,
@@ -25,6 +26,7 @@ import {
 const id = () => uuid("id").primaryKey().defaultRandom();
 const ts = (name: string) => timestamp(name, { withTimezone: true, mode: "date" });
 const createdAt = () => ts("created_at").notNull().defaultNow();
+const tsvector = customType<{ data: string }>({ dataType: () => "tsvector" });
 
 /* ───────────── enums ───────────── */
 
@@ -473,6 +475,9 @@ export const articles = pgTable(
     sourceItemId: uuid("source_item_id").references(() => sourceItems.id),
     grantId: uuid("grant_id").references(() => sourceGrants.id),
     isIndexable: boolean("is_indexable").notNull().default(false),
+    /** Editorial importance for the homepage lead (WEB-01). Higher wins; null means not a lead candidate. */
+    leadRank: integer("lead_rank"),
+    leadUntil: ts("lead_until"),
     createdBy: uuid("created_by").references(() => people.id),
     createdAt: createdAt(),
     updatedAt: ts("updated_at").notNull().defaultNow(),
@@ -513,10 +518,14 @@ export const articleVersions = pgTable(
     assistModel: text("assist_model"),
     /** Hash of the fields that count as a material edit. */
     contentHash: text("content_hash").notNull(),
+    /** Headline ranks above standfirst, which ranks above body (WEB-04). */
+    searchTsv: tsvector("search_tsv").generatedAlwaysAs(
+      sql`setweight(to_tsvector('english', headline), 'A') || setweight(to_tsvector('english', standfirst), 'B') || setweight(to_tsvector('english', body_text), 'C')`,
+    ),
     createdBy: uuid("created_by").references(() => people.id),
     createdAt: createdAt(),
   },
-  (t) => [uniqueIndex("article_versions_uq").on(t.articleId, t.version)],
+  (t) => [uniqueIndex("article_versions_uq").on(t.articleId, t.version), index("article_versions_search_idx").using("gin", t.searchTsv)],
 );
 
 export const articleCitations = pgTable(
@@ -620,9 +629,13 @@ export const feedEntries = pgTable(
     scope: text("scope").array().notNull().default(sql`'{web}'::text[]`),
     grantId: uuid("grant_id").references(() => sourceGrants.id),
     status: feedStatus("status").notNull().default("active"),
+    searchTsv: tsvector("search_tsv").generatedAlwaysAs(
+      sql`setweight(to_tsvector('english', display_title), 'A') || setweight(to_tsvector('english', publisher_name), 'B')`,
+    ),
     createdAt: createdAt(),
   },
   (t) => [
+    index("feed_entries_search_idx").using("gin", t.searchTsv),
     check(
       "feed_entries_target_ck",
       sql`(${t.kind} = 'source_card' and ${t.sourceItemId} is not null and ${t.sourceRevisionId} is not null and ${t.articleId} is null)
@@ -786,3 +799,26 @@ export const commandLog = pgTable("command_log", {
   result: jsonb("result").notNull(),
   createdAt: createdAt(),
 });
+
+/* ───────────── reader site (phase 2) ───────────── */
+
+/** Configurable breaking strip: needs an owner, an expiry and a verified story link (WEB-01). */
+export const breakingStrips = pgTable("breaking_strips", {
+  id: id(),
+  text: text("text").notNull(),
+  articleId: uuid("article_id").notNull().references(() => articles.id),
+  ownerPersonId: uuid("owner_person_id").notNull().references(() => people.id),
+  startsAt: ts("starts_at").notNull().defaultNow(),
+  expiresAt: ts("expires_at").notNull(),
+  createdAt: createdAt(),
+});
+
+/** Spelling and renamed-place equivalents applied to search queries, e.g. Bangalore and Bengaluru (WEB-02). */
+export const searchSynonyms = pgTable(
+  "search_synonyms",
+  {
+    term: text("term").notNull(),
+    synonym: text("synonym").notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.term, t.synonym] }), check("search_synonyms_lower_ck", sql`${t.term} = lower(${t.term}) and ${t.synonym} = lower(${t.synonym})`)],
+);
