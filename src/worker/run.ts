@@ -13,6 +13,7 @@ import { sweepCardRights } from "@/core/cards";
 import { processIngestEvent } from "@/core/ingest/process";
 import { claim, complete, fail, PermanentJobError, type ClaimedJob } from "@/core/jobs";
 import { type Distributor, processOutbox } from "@/core/outbox";
+import { reconcile } from "@/core/reconcile";
 
 export type JobHandler = (db: Db, job: ClaimedJob, now: Date) => Promise<void>;
 
@@ -58,6 +59,8 @@ export async function runDueJobs(db: Db, worker: string, now: Date, opts: { max?
 export async function schedulerTick(db: Db, distributor: Distributor, now: Date) {
   const cards = await db.transaction((tx) => sweepCardRights(tx, now));
   const copies = await sweepArticleRights(db, now);
+  // Reconcile before delivering, so a reapplied suppression is purged in the same pass.
+  const reconciled = await reconcile(db, now);
   const outbox = await processOutbox(db, distributor, now);
-  return { cardsSuppressed: cards, copiesSuppressed: copies, outbox };
+  return { cardsSuppressed: cards, copiesSuppressed: copies, reconciled, outbox };
 }

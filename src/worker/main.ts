@@ -36,7 +36,7 @@ async function loop() {
       if (Date.now() - lastTick >= TICK_MS) {
         lastTick = Date.now();
         const tick = await schedulerTick(db, distributor, new Date());
-        if (tick.cardsSuppressed || tick.copiesSuppressed || tick.outbox.events) console.log(JSON.stringify({ msg: "tick", ...tick }));
+        if (tick.cardsSuppressed || tick.copiesSuppressed || tick.outbox.events || tick.reconciled.suppressionsReapplied || tick.reconciled.scheduledJobsRestored) console.log(JSON.stringify({ msg: "tick", ...tick }));
       }
       if (handled === 0) await new Promise((r) => setTimeout(r, JOB_POLL_MS));
     } catch (e) {

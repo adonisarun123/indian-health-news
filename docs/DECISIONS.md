@@ -1,7 +1,7 @@
 # Build log and decisions
 
 Source of truth: `India_Health_News_SRS` v1.0, 19 November 2026.
-Last updated: 19 November 2026, end of phase 2.
+Last updated: 19 November 2026, end of phase 5.
 
 ## Phases
 
@@ -9,9 +9,9 @@ Last updated: 19 November 2026, end of phase 2.
 |---|---|---|
 | 1 | Schema, signed ingest API, worker, publishing policy, editorial commands, AT-01 to AT-06 | Done |
 | 2 | Public site: home, latest, article, source cards, hubs, profiles, search (WEB, UX) | Done |
-| 3 | Newsroom: staff sign-in with MFA, queues, editor, approvals UI, source and rights registers, staff HTTP routes (ED, ADM) | Not started |
-| 4 | JSON-LD, sitemaps, news sitemap, RSS, cache invalidation and purge (SEO, SD, ARC-02) | Not started |
-| 5 | Security checks, AT-07 to AT-16, deploy to Vercel and a worker host (SEC, OPS) | Not started |
+| 3 | Newsroom: staff sign-in with MFA, queues, editor, approvals UI, source and rights registers, staff HTTP routes (ED, ADM) | Done, with the gaps listed below |
+| 4 | JSON-LD, sitemaps, news sitemap, RSS, cache invalidation and purge (SEO, SD, ARC-02) | Done, with the gaps listed below |
+| 5 | Security checks, AT-07 to AT-16, deploy to Vercel and a worker host (SEC, OPS) | Done, with the gaps listed below |
 
 ## What phase 1 delivers
 
@@ -84,10 +84,71 @@ the 170 KiB budget (OPS-02), measured on a local production build.
    motion, the five-reader usability gate (UX-05), field Web Vitals, analytics
    events (OPS-04). These are phase 5 or need people.
 
+## What phases 3 to 5 deliver
+
+**Phase 3, newsroom**
+- Staff sign-in: scrypt passwords, mandatory TOTP, single-use invitations,
+  lockout after five failures, database sessions that an administrator can end
+  at once. No third-party identity service.
+- Newsroom at `/newsroom`: queue of held and waiting items with reasons and
+  next actions, story editor with versioning, approvals and preview, source and
+  rights register, reader cases, staff administration, settings and audit trail.
+- Staff API per ADM-02 and ADM-05, with session and same-origin checks.
+- Reader report form with case numbers, rate limiting and private contacts.
+- Policy pages are versioned documents; publisher facts come from settings.
+
+**Phase 4, discovery**
+- JSON-LD on every template, built from the published record, with a
+  structural validator. Sitemap index and shards, news sitemap, robots.txt,
+  site and section RSS.
+- Listings are cached for at most one minute and dropped on every publication
+  event. Story pages are always read live.
+
+**Phase 5, hardening**
+- Reconciliation after a restore: suppression decisions are reapplied, lost
+  scheduled jobs restored, stories without a source reported (OPS-03).
+- Security headers and a content security policy with no third-party origins.
+- 68 passing tests: 52 in `npm test`, 16 over HTTP in `npm run test:site`.
+
+### Acceptance test status
+
+| Test | Status | What is and is not covered |
+|---|---|---|
+| AT-01 to AT-06 | Automated | Full |
+| AT-07 | Automated | Retraction, 410/451, feeds, search and recovery by reconciliation. A real backup restore has not been rehearsed. |
+| AT-08 | Partly automated | Lease expiry, dead letters, replay, source isolation, missed scheduled job. Source 429 and parser drift belong to the scraper, which does not exist yet. |
+| AT-09 | Automated | Full |
+| AT-10 | Automated | Full, against 1,002 fixture stories |
+| AT-11 | Automated | Graph and page parity. Google's Rich Results Test has not been run: it needs a public URL. |
+| AT-12 | Partly | Overflow, heading and touch-target checks at five widths in a headless browser. No screen reader, zoom or reduced-motion testing. |
+| AT-13 | Not done | Needs load tooling, India-based probes and field traffic. |
+| AT-14 | Partly automated | Unapproved URL, protected preview, case details absent from public pages. No media pipeline exists, so there is no restricted asset to test. |
+| AT-15 | Automated | Aliases, empty-state recovery, broken-link status and verification task |
+| AT-16 | Partly automated | Correction behaviour. Restore timing (RPO 15 min, RTO 4 h) has not been measured. |
+
+### Decisions in phases 3 to 5
+
+1. **Sign-in is built in, not Auth.js.** Its password provider has no second
+   factor and no server-side revocation, which SEC-02 needs.
+2. **`body_text` added to the scraper contract.** Plain text only. It is
+   discarded at intake unless the grant in force covers full text.
+3. **A partner copy auto-publishes only when** the grant covers full text, the
+   global and per-source switches are on, the source has a default section and
+   the item carries no risk flag. It replaces the source card for that item.
+4. **Policy text is a draft.** Privacy, terms and complaints were written to
+   describe what the platform does. They are not legal advice and are noindex
+   until a reviewer is recorded and the publisher details are complete.
+5. **Story pages are not cached.** An earlier design cached them and a test
+   showed it could serve stale content. Only listings and navigation are cached.
+6. **Work runs after the response** on ingest and newsroom actions, so a
+   separate worker is optional for a pilot. Scheduled releases and rights
+   sweeps still need a regular tick: the standalone worker (`npm run worker`)
+   or a cron call to `/api/internal/tick`.
+7. **The newsroom shares the public layout.** It is functional, not designed.
+8. **No analytics events** (OPS-04) and no error tracking service are wired in.
+
 ## Deferred out of phase 1
 
-- **Staff HTTP routes** (`/api/v1/staff/...`). The commands exist and are tested;
-  they are not exposed over HTTP until staff sign-in exists in phase 3.
 - **Media pipeline.** Tables exist. No upload, renditions or delivery yet.
 - **Outbox delivery targets.** Events fan out to named targets and are logged.
   Real cache invalidation, purge, RSS and sitemap rebuilds arrive in phase 4.
@@ -122,8 +183,8 @@ the 170 KiB budget (OPS-02), measured on a local production build.
    HMAC over `timestamp + "." + event_id + "."`.
 10. **An expired licensed copy returns 410.** The SRS does not name a status for
     rights expiry.
-11. **Staff sign-in is unspecified in the SRS.** Planned: Auth.js with TOTP.
-    Object storage vendor is also unnamed: code will target the S3 API.
+11. **Staff sign-in is unspecified in the SRS.** Built in: see phase 3.
+    Object storage vendor is also unnamed and no media pipeline exists yet.
 
 ## Not software, and blocking launch
 

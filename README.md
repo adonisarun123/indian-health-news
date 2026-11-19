@@ -4,8 +4,8 @@ Platform for a mobile health news publication: a scraper submits items to a priv
 API, the platform decides how each item may appear, records that decision and
 distributes approved content. Built from `India_Health_News_SRS` v1.0 (19 Nov 2026).
 
-**Status: phase 2 of 5.** Backend and reader site. There is no newsroom UI yet,
-pages are not cached, and the policy pages are placeholders.
+**Status: all five phases built.** Not launch-ready: see the acceptance test
+table and the "not software" list in the decisions file.
 See [docs/DECISIONS.md](docs/DECISIONS.md) for what is built, what is deferred and
 where this build departs from the SRS.
 
@@ -29,6 +29,10 @@ Zod · Vitest.
 | `src/core/public.ts`, `src/core/reader.ts` | Published projection: the only read path for public pages, listings and search |
 | `src/app/`, `src/components/` | Reader pages and components |
 | `src/proxy.ts` | 410 and 451 responses for removed stories |
+| `src/core/auth.ts`, `src/app/newsroom/` | Staff sign-in and the newsroom |
+| `src/core/sources.ts`, `cases.ts`, `settings.ts` | Source and rights register, reader cases, publisher settings and policy pages |
+| `src/core/jsonld.ts`, `src/app/sitemap.xml/`, `feed.xml/` | Structured data, sitemaps and RSS |
+| `src/core/reconcile.ts` | Post-restore reconciliation |
 | `src/core/jobs.ts`, `src/worker/` | Durable queue, worker loop, scheduler tick |
 | `src/app/api/v1/ingest/` | `POST /events`, `GET /events/{event_id}` |
 | `scripts/produce.ts`, `fixtures/` | Fixture producer standing in for the scraper |
@@ -42,7 +46,10 @@ cp .env.example .env.local        # fill DATABASE_URL, DATABASE_URL_DIRECT, INGE
 npm run db:migrate
 npm run db:seed -- --demo         # dev only; demo newsroom, sources and stories; prints producer secrets
 
-npm run dev                       # terminal 1: web and intake API
+npm run staff -- invite --email you@example.com --name "Your Name" --roles administrator,managing_editor,editor
+                                  # prints a one-time link to set a password and authenticator
+
+npm run dev                       # terminal 1: web, newsroom at /newsroom, intake API
 npm run worker                    # terminal 2: background worker
 npm run produce -- fixtures/events/notice-204-r1.json   # terminal 3: submit a signed event
 ```
