@@ -203,7 +203,9 @@ the 170 KiB budget (OPS-02), measured on a local production build.
 - **Database:** the Neon database supplied on 19 November 2026 (endpoint
   `ep-soft-feather-b3jn6g1u`, Singapore, Postgres 18). Migrated and seeded with
   taxonomy, search synonyms and the six policy pages. No demo content.
-- **Web:** Vercel project `indian-health-news`, deploying from `main`.
+- **Web:** Vercel project `indian-health-news`, deploying from `main` to
+  https://indian-health-news.vercel.app. Functions run in Singapore (`sin1`),
+  the same region as the database.
   Production environment variables: `DATABASE_URL`, `INGEST_SECRET_KEY`,
   `CRON_SECRET`, `SITE_NAME`. Preview deployments have no database on purpose.
 - **Scheduler:** `vercel.json` calls `/api/internal/tick` once a day, the most a
