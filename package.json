@@ -19,7 +19,8 @@
     "produce": "tsx --env-file-if-exists=.env.local scripts/produce.ts",
     "test:db": "docker compose up -d test-db",
     "test:site": "NODE_ENV=production next build && E2E=1 vitest run tests/site.e2e.test.ts",
-    "staff": "tsx --env-file-if-exists=.env.local scripts/staff.ts"
+    "staff": "tsx --env-file-if-exists=.env.local scripts/staff.ts",
+    "drafts": "tsx --env-file-if-exists=.env.local scripts/load-drafts.ts"
   },
   "dependencies": {
     "drizzle-orm": "^0.45.4",

@@ -1,0 +1,169 @@
+[
+  {
+    "type": "original_brief",
+    "slug": "cancer-medicine-prices-revised-mrp",
+    "sectionSlug": "medicines-devices",
+    "headline": "Lower prices for 1,364 cancer medicine formulations take effect",
+    "standfirst": "Companies reported price cuts on 139 more formulations in the two days before the 9 November start date, official figures show.",
+    "body": [
+      { "type": "paragraph", "text": "Revised maximum retail prices for 1,364 anti-cancer formulations came into force on 9 November, the Department of Pharmaceuticals said. The National Pharmaceutical Pricing Authority (NPPA) capped the trade margin on 137 anti-cancer drugs in October, acting on the recommendations of an expert committee set up by the Directorate General of Health Services." },
+      { "type": "paragraph", "text": "By 8 November, 85 companies had reported revised prices covering 121 of those drugs. The department's earlier update, issued on 7 November, counted 76 companies and 1,225 formulations. Between the two updates, the number of brands with cuts of more than half rose from 600 to 679. The largest reported cut is 96.45 per cent." },
+      { "type": "paragraph", "text": "The department puts the annual saving to buyers at ₹3,540.38 crore, up from ₹3,502.31 crore in the earlier update. Between 10 and 15 of the 137 drugs are not yet sold in India. The cap will apply to them when they are launched, the 7 November release said." },
+      { "type": "heading", "text": "What buyers can check" },
+      { "type": "list", "ordered": false, "items": [
+        "The revised price is printed on the pack.",
+        "Prices can be verified on the Pharma Sahi Daam mobile app or at nppa.gov.in.",
+        "No chemist or hospital pharmacy may charge more than the revised price.",
+        "Complaints about overcharging can be filed on the Pharma Jan Samadhan portal or with the NPPA helpline, 1800-111-255."
+      ] }
+    ],
+    "citations": [
+      { "url": "https://www.pib.gov.in/PressReleasePage.aspx?PRID=2334268", "label": "Revised MRPs of 1,364 Anti-Cancer Formulations Come into Effect from Today (9 November 2026)", "publisherName": "Press Information Bureau", "isPrimary": true },
+      { "url": "https://www.pib.gov.in/PressReleasePage.aspx?PRID=2333949", "label": "Revised Prices of Anti-Cancer Medicines to Come into Effect from 9th November (7 November 2026)", "publisherName": "Press Information Bureau" }
+    ],
+    "contribution": "prior_notice_comparison",
+    "contributionNote": "Compares the 9 November release with the department's 7 November update: companies, formulations, brands cut by more than half, and estimated savings.",
+    "assistModel": "claude-fable-5-2"
+  },
+  {
+    "type": "press_material",
+    "slug": "substandard-medicines-licence-suspension-draft",
+    "sectionSlug": "policy",
+    "headline": "Health ministry proposes immediate licence suspension for medicines that fail key quality checks",
+    "standfirst": "The draft change to the Drugs Rules is open for public comment for 30 days.",
+    "body": [
+      { "type": "paragraph", "text": "The Union health ministry has proposed changing the Drugs Rules, 1945, so that a manufacturing licence can be suspended at once when a medicine is declared not of standard quality on specified critical parameters." },
+      { "type": "paragraph", "text": "Under the present rules, a licence can be suspended or cancelled only after a set procedure that includes a show-cause notice. The ministry says the change is meant to stop such medicines from being made and distributed while that procedure runs." },
+      { "type": "paragraph", "text": "A suspended licence would not come back automatically. The manufacturer would first have to find the root cause of the failure and put corrective and preventive measures in place, and the licensing authority would have to verify them." },
+      { "type": "paragraph", "text": "This is a draft. Objections and suggestions can be sent within 30 days to the Under Secretary (Drugs) at the ministry, or by email to drugsdiv-mohfw@gov.in. Nothing changes until final rules are notified." }
+    ],
+    "citations": [
+      { "url": "https://newsonair.gov.in/govt-proposes-immediate-suspension-of-manufacturing-licence-of-substandard-drugs/", "label": "Govt proposes immediate suspension of manufacturing licence of substandard drugs (5 November 2026)", "publisherName": "Akashvani News", "isPrimary": true }
+    ],
+    "assistModel": "claude-fable-5-2"
+  },
+  {
+    "type": "press_material",
+    "slug": "medical-devices-incentive-scheme-extended-2035-36",
+    "sectionSlug": "medicines-devices",
+    "headline": "Medical devices incentive scheme extended to 2035-36; new applications invited",
+    "standfirst": "About ₹2,700 crore is available, and the minimum sales condition for claiming incentives has been dropped.",
+    "body": [
+      { "type": "paragraph", "text": "The government has extended its production-linked incentive scheme for making medical devices in India up to 2035-36 and invited fresh applications, the Ministry of Chemicals and Fertilizers announced on 10 November. About ₹2,700 crore is available under the scheme." },
+      { "type": "paragraph", "text": "Applicants will have three years to set up manufacturing in one of four segments:" },
+      { "type": "list", "ordered": false, "items": [
+        "medical consumables, disposables and implants",
+        "critical components",
+        "high-end devices whose manufacture in India is at an early stage",
+        "high-end devices that are at present only assembled in India"
+      ] },
+      { "type": "paragraph", "text": "The minimum sales threshold for claiming incentives has been discontinued and the minimum investment requirement has been lowered. A company may file any number of applications in one or more segments." },
+      { "type": "paragraph", "text": "Applications will be taken on an online portal that the ministry said would open within 10 days of the announcement. The application window will then stay open rather than close after a fixed round." }
+    ],
+    "citations": [
+      { "url": "https://newsonair.gov.in/govt-invites-fresh-applications-under-pli-scheme-for-medical-devices/", "label": "Govt invites fresh applications under PLI scheme for medical devices (10 November 2026)", "publisherName": "Akashvani News", "isPrimary": true }
+    ],
+    "assistModel": "claude-fable-5-2"
+  },
+  {
+    "type": "original_brief",
+    "slug": "household-share-health-spending-2023-24",
+    "sectionSlug": "healthcare-delivery",
+    "headline": "Households paid 42.7% of India's health bill in 2023-24, official accounts show",
+    "standfirst": "The share is down from 64.2% a decade earlier but remains above the 39.4% recorded in 2021-22.",
+    "body": [
+      { "type": "paragraph", "text": "Payments made directly by households accounted for 42.7 per cent of India's total health expenditure in 2023-24, according to the National Health Accounts estimates released by the Union health ministry on 15 November. The share was 43.4 per cent in 2022-23 and 64.2 per cent in 2013-14." },
+      { "type": "paragraph", "text": "Government health expenditure rose from ₹1,29,778 crore in 2013-14 to ₹4,14,196 crore in 2023-24. Its share of total health expenditure went from 28.6 per cent to 43.5 per cent, which puts it slightly ahead of what households pay directly." },
+      { "type": "paragraph", "text": "Other pooled sources also grew over the decade. Social security spending on health rose from 6 per cent of the total to 11 per cent, and private health insurance from 3.4 per cent to 10.2 per cent. Government spending on primary care was about ₹1.53 lakh crore in 2023-24." },
+      { "type": "paragraph", "text": "The household share is not at its lowest. It stood at 39.4 per cent in 2021-22, a figure the ministry has previously linked to one-time additional government spending in that period." },
+      { "type": "paragraph", "text": "This is the eleventh round of the estimates. They are prepared by the National Health Accounts Technical Secretariat at the National Health Systems Resource Centre." }
+    ],
+    "citations": [
+      { "url": "https://nhsrcindia.org/national-health-accounts-records", "label": "National Health Accounts reports, including the 2023-24 estimates", "publisherName": "National Health Systems Resource Centre", "isPrimary": true },
+      { "url": "https://theprint.in/india/indias-health-spending-triples-to-rs-4-14l-cr-out-of-pocket-spending-drops-to-42-7-nha/3099390/", "label": "PTI report of the ministry's release (15 November 2026)", "publisherName": "ThePrint / PTI" },
+      { "url": "https://www.theweek.in/news/health/2026/11/17/government-health-expenditure-rises.html", "label": "Year-by-year shares from the estimates (17 November 2026)", "publisherName": "The Week" },
+      { "url": "https://www.pib.gov.in/newsite/erelcontent.aspx?relid=289295&reg=48&lang=2", "label": "Union Health Ministry releases the National Health Accounts estimates for India 2022-23", "publisherName": "Press Information Bureau" }
+    ],
+    "contribution": "prior_notice_comparison",
+    "contributionNote": "Sets the 2023-24 household share beside the 2021-22 and 2022-23 estimates to show it is still above the 2021-22 level. Figures were taken from agency reports of the release; check against the report PDF before publishing.",
+    "assistModel": "claude-fable-5-2"
+  },
+  {
+    "type": "press_material",
+    "slug": "ayushman-bharat-review-meeting-kolkata",
+    "sectionSlug": "healthcare-delivery",
+    "headline": "States and Centre review Ayushman Bharat schemes at two-day Kolkata meeting",
+    "standfirst": "The National Health Authority says the next phase should be judged on quality of care, not only on coverage.",
+    "body": [
+      { "type": "paragraph", "text": "The National Health Authority held a two-day national review of the Ayushman Bharat Pradhan Mantri Jan Arogya Yojana (AB PM-JAY) and the Ayushman Bharat Digital Mission in Kolkata, ending on 6 November. Senior officials from states and union territories attended." },
+      { "type": "paragraph", "text": "The priorities set out for both schemes were:" },
+      { "type": "list", "ordered": false, "items": [
+        "expanding beneficiary coverage",
+        "improving how care is delivered",
+        "strengthening financial protection",
+        "faster adoption of digital health services",
+        "using data analytics, automation and artificial intelligence to improve efficiency, transparency and accountability"
+      ] },
+      { "type": "paragraph", "text": "The authority's chief executive, Dr Sunil Kumar Barnwal, said spending on health care has to show up as better care for people. The official account of the meeting gave no figures on enrolment, claims or hospitals." }
+    ],
+    "citations": [
+      { "url": "https://newsonair.gov.in/national-health-authority-reviews-progress-of-ab-pm-jay-and-abdm-in-kolkata/", "label": "National Health Authority reviews progress of AB PM-JAY and ABDM in Kolkata (7 November 2026)", "publisherName": "Akashvani News", "isPrimary": true }
+    ],
+    "assistModel": "claude-fable-5-2"
+  },
+  {
+    "type": "original_brief",
+    "slug": "sex-ratio-at-birth-918-supervisory-board",
+    "sectionSlug": "public-health",
+    "headline": "Sex ratio at birth at 918 girls per 1,000 boys, supervisory board told",
+    "standfirst": "The figure for 2022-24 is one point above the 917 the health ministry cited for 2021-23.",
+    "body": [
+      { "type": "paragraph", "text": "India recorded 918 female births for every 1,000 male births in 2022-24, according to the Sample Registration System figures placed before the Central Supervisory Board on 19 November. The board oversees the law that prohibits sex selection, the Pre-conception and Pre-natal Diagnostic Techniques Act, 1994. Union Health Minister J P Nadda chaired its 32nd meeting." },
+      { "type": "paragraph", "text": "The ministry had cited 917 for 2021-23 at a national meeting on the same law in October 2025. Chhattisgarh's ratio of 978 was singled out at the board meeting, and the minister asked states and union territories to address regional differences." },
+      { "type": "paragraph", "text": "Steps reported to the board included a national workshop on 1 October, workshops in all 36 states and union territories, radio messages on All India Radio FM channels for 20 days from 13 October, and a nodal agency, set up on the Supreme Court's directions, that tracks online advertisements for sex selection and seeks their removal." },
+      { "type": "paragraph", "text": "States were asked to inspect registered facilities regularly, follow up on violations and move compliance processes online. The board also discussed recommendations of the High-Level Committee on Non-Financial Regulatory Reforms. No decisions on them were reported." }
+    ],
+    "citations": [
+      { "url": "https://theprint.in/india/nadda-calls-for-sustained-efforts-by-states-uts-to-improve-sex-ratio-at-birth/3103569/", "label": "PTI report of the health ministry's account of the 32nd Central Supervisory Board meeting (19 November 2026)", "publisherName": "ThePrint / PTI", "isPrimary": true },
+      { "url": "https://www.pib.gov.in/PressReleasePage.aspx?PRID=2175358&reg=48&lang=2", "label": "National-level sensitization meeting on the PC&PNDT Act, with the 2021-23 figure (6 October 2025)", "publisherName": "Press Information Bureau" }
+    ],
+    "contribution": "prior_notice_comparison",
+    "contributionNote": "Compares the 2022-24 sex ratio at birth with the 2021-23 figure in the ministry's October 2025 release. Replace the agency link with the PIB release for the 32nd meeting before publishing.",
+    "assistModel": "claude-fable-5-2"
+  },
+  {
+    "type": "press_material",
+    "slug": "mercury-medical-devices-phase-out-2030",
+    "sectionSlug": "public-health",
+    "headline": "India aims to remove mercury thermometers and blood pressure monitors from health care by 2030",
+    "standfirst": "Nine states and union territories have already removed them from public health services, WHO India says.",
+    "body": [
+      { "type": "paragraph", "text": "India plans to eliminate mercury-containing thermometers and blood pressure monitors from health-care services by 2030, WHO India said in a release dated 22 October. The next phase covers replacing the devices, managing mercury waste safely and making reliable alternatives available." },
+      { "type": "paragraph", "text": "Fourteen states have completed inventories of their mercury-based devices and twelve have issued phase-out orders. Public health services in nine places no longer use them: Delhi, Punjab, Manipur, Sikkim, Goa, Haryana, Ladakh, Chandigarh, and the Andaman and Nicobar Islands." },
+      { "type": "paragraph", "text": "A waste system covering segregation, collection, temporary storage, transport and disposal is to be in place by late 2027, run jointly by health and environment departments." },
+      { "type": "paragraph", "text": "A technical mission met in New Delhi from 28 to 30 September to review progress, with the health and environment ministries, WHO, the UN Environment Programme and the Minamata Convention secretariat among those taking part. Thirty nodal officers nominated by states were trained online. The group visited Safdarjung Hospital, which has not used mercury devices since 2007." }
+    ],
+    "citations": [
+      { "url": "https://www.who.int/india/news/item/22-10-2026-push-to-eliminate-mercury-based-devices-in-health-care", "label": "Push to eliminate mercury-based devices in health care (22 October 2026)", "publisherName": "WHO India", "isPrimary": true }
+    ],
+    "assistModel": "claude-fable-5-2"
+  },
+  {
+    "type": "press_material",
+    "slug": "icmr-open-calls-november-2026",
+    "sectionSlug": "research",
+    "headline": "ICMR notices: wastewater pathogen tests and North-East research proposals close this month",
+    "standfirst": "Two calls from the Indian Council of Medical Research have deadlines on 25 and 30 November.",
+    "body": [
+      { "type": "paragraph", "text": "The Indian Council of Medical Research (ICMR) has asked for information on ready-to-use multiplex assays that detect priority gut and respiratory pathogens in wastewater. A multiplex assay looks for several targets in a single run. Responses are due by 25 November, and the form is on the ICMR website." },
+      { "type": "paragraph", "text": "The notice does not list the pathogens or say how the information will be used." },
+      { "type": "paragraph", "text": "Separately, research proposals from the North-Eastern region are being accepted under the Department of Health Research's human resource development scheme until 5 pm on 30 November." },
+      { "type": "paragraph", "text": "ICMR also announced the results of its SHINE national competition on 17 November, during the two-day DHR-ICMR Health Research Excellence Summit." }
+    ],
+    "citations": [
+      { "url": "https://www.icmr.gov.in/post/invitation-for-expression-of-interest-eoi-for-information-on-ready-to-use-multiplex-assays-for-detection-of-priority-enteric-and-respiratory-pathogens-in-wastewater-last-date-november-25-2026", "label": "Invitation for Expression of Interest: ready-to-use multiplex assays for pathogens in wastewater", "publisherName": "Indian Council of Medical Research", "isPrimary": true },
+      { "url": "https://www.icmr.gov.in/whats-new", "label": "What's New: open calls and announcements", "publisherName": "Indian Council of Medical Research" }
+    ],
+    "assistModel": "claude-fable-5-2"
+  }
+]
