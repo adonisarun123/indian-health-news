@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "source_id": "state-bulletin-demo",
+  "external_id": "alert-17",
+  "revision": 1,
+  "event_type": "item.upsert",
+  "source_url": "https://health.example/alerts/17",
+  "source_title": "Drug safety alert: batch recall for a paediatric syrup",
+  "language": "en",
+  "source_published_at": "2026-11-19T11:00:00+05:30"
+}

@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "source_id": "state-bulletin-demo",
+  "external_id": "notice-204",
+  "revision": 2,
+  "event_type": "item.upsert",
+  "source_url": "https://health.example/notices/204",
+  "source_title": "District reporting calendar released (revised dates)",
+  "language": "en",
+  "source_published_at": "2026-11-19T09:00:00+05:30",
+  "source_updated_at": "2026-11-19T12:30:00+05:30"
+}

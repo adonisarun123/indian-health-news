@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "source_id": "unknown-grant-demo",
+  "external_id": "post-88",
+  "revision": 1,
+  "event_type": "item.upsert",
+  "source_url": "https://unlicensed.example/posts/88",
+  "source_title": "Hospital board meeting schedule announced",
+  "language": "en",
+  "source_published_at": "2026-11-19T08:30:00+05:30"
+}

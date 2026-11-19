@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "source_id": "state-bulletin-demo",
+  "external_id": "notice-204",
+  "revision": 3,
+  "event_type": "item.withdraw",
+  "source_url": "https://health.example/notices/204",
+  "reason": "Notice withdrawn by the issuing department"
+}
