@@ -45,6 +45,8 @@ export interface PublicArticle {
   language: string;
   author: { name: string; slug: string; hasProfile: boolean } | null;
   sourceAuthorLabel: string | null;
+  /** Set when the story reproduces an official release word for word: the original's address. */
+  canonicalUrl: string | null;
   publishedAt: Date;
   modifiedAt: Date | null;
   correctionNote: string | null;
@@ -92,6 +94,7 @@ export async function getPublicArticle(db: Db, slug: string, now: Date, locale =
       language: v!.language,
       author: author ? { name: author.displayName, slug: author.slug, hasProfile: author.hasPublicProfile && author.status === "active" } : null,
       sourceAuthorLabel: v!.sourceAuthorLabel,
+      canonicalUrl: a.canonicalUrl,
       publishedAt: a.firstPublishedAt,
       modifiedAt: a.modifiedAt,
       correctionNote: a.modifiedAt ? v!.correctionNote : null,

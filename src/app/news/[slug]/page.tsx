@@ -36,6 +36,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     type: "article",
     publishedTime: isoIst(a.publishedAt),
     modifiedTime: a.modifiedAt ? isoIst(a.modifiedAt) : undefined,
+    canonical: a.canonicalUrl,
   });
 }
 
@@ -70,6 +71,8 @@ export default async function ArticlePage({ params }: Props) {
   const ctx = await getArticleContext(db, a.id, a.publicVersionId);
   const primary = a.citations.find((c) => c.isPrimary) ?? a.citations[0];
   const partner = a.type === "licensed_copy";
+  // Verbatim official release: credited to its publisher, like a partner copy.
+  const reproduced = partner || Boolean(a.canonicalUrl);
   const links = await linkStatuses(db, a.citations.map((c) => c.url));
   const related = ctx.section
     ? (await listFeed(db, now, { termId: ctx.section.id, kind: "article", excludeArticleId: a.id, limit: 4 })).items
@@ -80,6 +83,7 @@ export default async function ArticlePage({ params }: Props) {
     {
       slug: a.slug,
       type: a.type,
+      reproduced,
       headline: a.headline,
       section: ctx.section ? { name: ctx.section.name, slug: ctx.section.slug } : null,
       author: a.author,
@@ -106,8 +110,8 @@ export default async function ArticlePage({ params }: Props) {
         </ol>
       </nav>
 
-      {partner && <p className="label-strip">Republished from {primary?.publisher}</p>}
-      {TYPE_LABEL[a.type] && <p className="label-strip">{TYPE_LABEL[a.type]}</p>}
+      {reproduced && <p className="label-strip">Republished from {primary?.publisher}</p>}
+      {TYPE_LABEL[a.type] && !reproduced && <p className="label-strip">{TYPE_LABEL[a.type]}</p>}
       <p className="kicker">
         {ctx.section && <Link href={`/section/${ctx.section.slug}`}>{ctx.section.name}</Link>}
         {ctx.states.map((s) => (
@@ -121,7 +125,7 @@ export default async function ArticlePage({ params }: Props) {
       {a.standfirst && <p className="standfirst">{a.standfirst}</p>}
 
       <p className="byline">
-        {partner ? (
+        {reproduced ? (
           <>By {a.sourceAuthorLabel && a.sourceAuthorLabel !== primary?.publisher ? `${a.sourceAuthorLabel}, ${primary?.publisher}` : primary?.publisher}</>
         ) : a.author ? (
           <>By {a.author.hasProfile ? <Link href={`/authors/${a.author.slug}`}>{a.author.name}</Link> : a.author.name}</>

@@ -479,6 +479,11 @@ export const articles = pgTable(
     sourceItemId: uuid("source_item_id").references(() => sourceItems.id),
     grantId: uuid("grant_id").references(() => sourceGrants.id),
     isIndexable: boolean("is_indexable").notNull().default(false),
+    /**
+     * Verbatim republication of an official release: the original's address.
+     * The page names it as canonical and stays out of our sitemaps (publisher decision, 20 Nov 2026).
+     */
+    canonicalUrl: text("canonical_url"),
     /** Editorial importance for the homepage lead (WEB-01). Higher wins; null means not a lead candidate. */
     /** Released by source automation rather than a named editor (PUB table, licensed republication). */
     autoPublished: boolean("auto_published").notNull().default(false),

@@ -470,7 +470,7 @@ export async function listSitemapArticles(db: Db, now: Date, opts: { since?: Dat
   const res = await db.execute<Row>(sql`
     select a.slug, fe.display_title, a.first_published_at, coalesce(a.modified_at, a.first_published_at) as lastmod
     ${publicFeed(now, "web")}
-      and fe.kind = 'article' and a.is_indexable ${since}
+      and fe.kind = 'article' and a.is_indexable and a.canonical_url is null ${since}
     order by a.first_published_at asc, a.id asc
     limit ${opts.limit} offset ${opts.offset}`);
   return res.rows.map((r) => ({ slug: r.slug as string, title: r.display_title as string, publishedAt: new Date(r.first_published_at as string), lastmod: new Date(r.lastmod as string) }));
@@ -478,7 +478,7 @@ export async function listSitemapArticles(db: Db, now: Date, opts: { since?: Dat
 
 export async function countSitemapArticles(db: Db, now: Date, since?: Date): Promise<number> {
   const cond = since ? sql`and a.first_published_at > ${iso(since)} and a.type <> 'licensed_copy'` : sql``;
-  const res = await db.execute<{ n: string }>(sql`select count(*) as n ${publicFeed(now, "web")} and fe.kind = 'article' and a.is_indexable ${cond}`);
+  const res = await db.execute<{ n: string }>(sql`select count(*) as n ${publicFeed(now, "web")} and fe.kind = 'article' and a.is_indexable and a.canonical_url is null ${cond}`);
   return Number(res.rows[0]?.n ?? 0);
 }
 

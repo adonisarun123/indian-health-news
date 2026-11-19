@@ -3,9 +3,9 @@ import { eq, sql } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { articles, featureFlags } from "@/db/schema";
 import { seedDemoContent } from "@/db/seed-content";
-import { patchArticle, performAction } from "@/core/articles";
+import { createArticle, patchArticle, performAction } from "@/core/articles";
 import { articleGraph, homeGraph, hubGraph, istIso, profileGraph, serializeJsonLd, validateGraph } from "@/core/jsonld";
-import { getPublicArticle } from "@/core/public";
+import { getPublicArticle, listPublicFeed } from "@/core/public";
 import { countSitemapArticles, getArticleContext, listSitemapArticles, NEWS_WINDOW_MS } from "@/core/reader";
 import { at, createCtx, type Ctx, key, T0 } from "./helpers";
 
@@ -142,5 +142,45 @@ describe("AT-11 · SD — the graph matches the page for the first and corrected
     broken["@graph"][1]!.publisher = { "@id": "https://news.test/#missing" };
     broken["@graph"][1]!.url = "/relative";
     expect(validateGraph(broken)).toHaveLength(2);
+  });
+});
+
+describe("verbatim official releases (publisher decision, 20 Nov 2026)", () => {
+  let ctx: Ctx;
+  beforeAll(async () => void (ctx = await createCtx()));
+  afterAll(() => ctx.close());
+
+  const release = {
+    type: "press_material",
+    slug: "pib-gsdp-draft",
+    canonicalUrl: "https://www.pib.gov.in/PressReleasePage.aspx?PRID=2338316",
+    headline: "Union Ministry of Health Proposes Incorporation of Good Storage and Distribution Practices into Drugs Rules, 1945",
+    standfirst: "Full text of a release issued through the Press Information Bureau.",
+    body: [{ type: "paragraph", text: "The Union Ministry of Health and Family Welfare has proposed the incorporation of Good Storage and Distribution Practices guidelines." }],
+    sectionSlug: "policy",
+    citations: [{ url: "https://www.pib.gov.in/PressReleasePage.aspx?PRID=2338316", label: "Press release, 19 Nov 2026", publisherName: "Press Information Bureau", isPrimary: true }],
+  };
+
+  it("accepts a canonical address only for press material that cites it as the primary source", async () => {
+    const editor = await ctx.actor("editor");
+    await expect(createArticle(ctx.db, editor, { ...release, slug: "x1", type: "original_brief", contribution: "local_reporting", contributionNote: "n" }, T0)).rejects.toMatchObject({ status: 422 });
+    await expect(createArticle(ctx.db, editor, { ...release, slug: "x2", citations: [{ ...release.citations[0], isPrimary: false }] }, T0)).rejects.toMatchObject({ status: 422 });
+  });
+
+  it("names the original as canonical, credits it, and keeps it out of the sitemaps", async () => {
+    const editor = await ctx.actor("editor");
+    const made = await createArticle(ctx.db, editor, release, T0);
+    let v = made.version;
+    for (const action of ["submit", "approve-editorial", "publish"] as const) v = (await performAction(ctx.db, editor, made.id, { action, expectedVersion: v, idempotencyKey: key() }, at(1))).version;
+    const r = await getPublicArticle(ctx.db, "pib-gsdp-draft", at(2));
+    expect(r.kind).toBe("ok");
+    if (r.kind !== "ok") return;
+    expect(r.article.canonicalUrl).toBe(release.canonicalUrl);
+    expect((await listSitemapArticles(ctx.db, at(2), { limit: 100, offset: 0 })).map((s) => s.slug)).not.toContain("pib-gsdp-draft");
+    expect(await countSitemapArticles(ctx.db, at(2))).toBe(0);
+    // Still listed for readers.
+    expect((await listPublicFeed(ctx.db, at(2))).map((f) => f.url)).toContain("/news/pib-gsdp-draft");
+    const graph = JSON.stringify(articleGraph({ origin: "https://news.test", name: "Test" }, { slug: "pib-gsdp-draft", type: "press_material", reproduced: true, headline: release.headline, section: null, author: null, publishedAt: at(1), modifiedAt: null, citations: [], reviewer: null }));
+    expect(graph).not.toContain("NewsArticle");
   });
 });

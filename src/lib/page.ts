@@ -8,14 +8,15 @@ import { absolute, SITE_NAME } from "./site";
  * allows it and the rollout flag for indexing is on. Public noindex pages stay
  * crawlable so crawlers can read the directive.
  */
-export async function pageMeta(o: { title: string; description: string; path: string; indexable: boolean; type?: "article" | "website"; publishedTime?: string; modifiedTime?: string }): Promise<Metadata> {
+export async function pageMeta(o: { title: string; description: string; path: string; indexable: boolean; type?: "article" | "website"; publishedTime?: string; modifiedTime?: string; canonical?: string | null }): Promise<Metadata> {
   const flags = await getFlags(getDb());
   const index = o.indexable && Boolean(flags.indexing);
   const url = absolute(o.path);
   return {
     title: o.title,
     description: o.description,
-    alternates: { canonical: url },
+    // A verbatim copy of an official release names the original as the canonical page.
+    alternates: { canonical: o.canonical ?? url },
     robots: index ? { index: true, follow: true, "max-image-preview": "large" } : { index: false, follow: true },
     openGraph: {
       title: o.title,
