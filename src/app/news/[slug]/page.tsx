@@ -8,7 +8,8 @@ import { getPublicArticle } from "@/core/public";
 import { linkStatuses } from "@/core/cases";
 import { getArticleContext, listFeed } from "@/core/reader";
 import { ArticleBody as Body } from "@/components/ArticleBody";
-import { FeedList } from "@/components/Feed";
+import { Teaser } from "@/components/Feed";
+import { WithRail } from "@/components/Rail";
 import { Share } from "@/components/Share";
 import { isoIst, longDate, longDateTime } from "@/lib/format";
 import { pageMeta } from "@/lib/page";
@@ -95,6 +96,7 @@ export default async function ArticlePage({ params }: Props) {
   );
 
   return (
+    <WithRail now={now} excludeUrls={[`/news/${a.slug}`]}>
     <article className="article">
       <JsonLd graph={graph} />
       <nav className="breadcrumb" aria-label="Breadcrumb">
@@ -124,6 +126,7 @@ export default async function ArticlePage({ params }: Props) {
       <h1>{a.headline}</h1>
       {a.standfirst && <p className="standfirst">{a.standfirst}</p>}
 
+      <div className="article-meta">
       <p className="byline">
         {reproduced ? (
           <>By {a.sourceAuthorLabel && a.sourceAuthorLabel !== primary?.publisher ? `${a.sourceAuthorLabel}, ${primary?.publisher}` : primary?.publisher}</>
@@ -158,6 +161,7 @@ export default async function ArticlePage({ params }: Props) {
           {ctx.medicalReview.specialty && <>, {ctx.medicalReview.specialty}</>}
         </p>
       )}
+      </div>
 
       {primary && (
         <aside className="primary-source" aria-label="Primary source">
@@ -215,13 +219,20 @@ export default async function ArticlePage({ params }: Props) {
       </p>
 
       {related.length > 0 && (
-        <section aria-labelledby="related-heading">
-          <h2 id="related-heading" className="section-title">
-            Related reports
+        <section className="related" aria-labelledby="related-heading">
+          <h2 id="related-heading" className="block-title">
+            {ctx.section ? <>More in {ctx.section.name}</> : "Related reports"}
           </h2>
-          <FeedList items={related} now={now} />
+          <ul className="related-grid">
+            {related.map((i) => (
+              <li key={i.id}>
+                <Teaser item={i} now={now} size="s" kicker={false} />
+              </li>
+            ))}
+          </ul>
         </section>
       )}
     </article>
+    </WithRail>
   );
 }

@@ -6,6 +6,7 @@ import { getBreaking, listSections, listTermsWithContent } from "@/core/reader";
 import { Tabs } from "@/components/Tabs";
 import { cached, TAG_FEED } from "@/lib/cache";
 import { SITE_NAME, SITE_TAGLINE, SITE_URL } from "@/lib/site";
+import { mastheadDate } from "@/lib/format";
 import "./globals.css";
 
 // Every public page reads the published projection per request. Caching with
@@ -20,7 +21,7 @@ export const metadata: Metadata = {
   alternates: { types: { "application/rss+xml": "/feed.xml" } },
 };
 
-export const viewport: Viewport = { width: "device-width", initialScale: 1, themeColor: "#0a2540" };
+export const viewport: Viewport = { width: "device-width", initialScale: 1, themeColor: "#ffffff" };
 
 const FOOTER_PUBLICATION: [string, string][] = [
   ["/about", "About"],
@@ -43,7 +44,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   const now = new Date();
   const { sections, states, breaking } = await cached(["layout-nav"], [TAG_FEED], async () => ({ sections: await listSections(db), states: await listTermsWithContent(db, "state", now), breaking: await getBreaking(db, now) }));
   const year = new Intl.DateTimeFormat("en-IN", { timeZone: "Asia/Kolkata", year: "numeric" }).format(now);
-  const tabs = [{ href: "/", label: "Latest" }, ...sections.map((s) => ({ href: `/section/${s.slug}`, label: SHORT[s.slug] ?? s.name })), { href: "/states", label: "States" }];
+  const tabs = [{ href: "/", label: "Home" }, { href: "/latest", label: "Latest" }, ...sections.map((s) => ({ href: `/section/${s.slug}`, label: SHORT[s.slug] ?? s.name })), { href: "/states", label: "States" }, { href: "/submit-news", label: "Submit news" }];
 
   return (
     <html lang="en-IN">
@@ -53,6 +54,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
         </a>
         <header className="masthead">
           <div className="wrap masthead-bar">
+            <div className="masthead-left">
             <details className="menu">
               <summary className="icon-button" aria-label="Menu">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
@@ -99,8 +101,11 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
                 </ul>
               </nav>
             </details>
+            <p className="masthead-date">{mastheadDate(now)}</p>
+            </div>
             <Link className="masthead-title" href="/">
               {SITE_NAME}
+              <span className="masthead-tagline">Health news from across India</span>
             </Link>
             <div className="masthead-actions">
               <Link className="masthead-cta" href="/submit-news">

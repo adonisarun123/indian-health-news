@@ -7,6 +7,7 @@ import { SITE_NAME, SITE_URL } from "@/lib/site";
 import { JsonLd } from "./JsonLd";
 import { first, pageMeta } from "@/lib/page";
 import { EmptyHub, Listing } from "./Hub";
+import { WithRail } from "./Rail";
 
 export type HubProps = { params: Promise<{ slug: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> };
 
@@ -39,14 +40,14 @@ export async function HubPage({ kind, params, searchParams }: HubProps & { kind:
   // The list in the markup is the list on the page, in the same order (SD table).
   const page = await listFeed(db, now, { termId: term.id, cursor: decodeCursor(before), limit: 20 });
   return (
-    <>
+    <WithRail now={now}>
       <JsonLd graph={hubGraph({ origin: SITE_URL, name: SITE_NAME }, { name: term.name, path: `${PATH[kind]}/${term.slug}`, kindLabel: kind, items: page.items.map((i) => ({ name: i.title, url: i.url })) })} />
-      <p className="kicker">{kind === "state" ? "State or union territory" : kind === "topic" ? "Topic" : "Section"}</p>
-      <h1 className="page-title">{term.name}</h1>
-      <p className="intro" style={{ marginBottom: "1.5rem" }}>
-        {term.intro ?? DEFAULT_INTRO[kind](term.name)}
-      </p>
+      <header className="page-head">
+        <p className="kicker">{kind === "state" ? "State or union territory" : kind === "topic" ? "Topic" : "Section"}</p>
+        <h1 className="page-title">{term.name}</h1>
+        <p className="intro">{term.intro ?? DEFAULT_INTRO[kind](term.name)}</p>
+      </header>
       <Listing db={db} now={now} basePath={`${PATH[kind]}/${term.slug}`} before={before} filter={{ termId: term.id }} empty={<EmptyHub what={term.name} />} page={page} />
-    </>
+    </WithRail>
   );
 }

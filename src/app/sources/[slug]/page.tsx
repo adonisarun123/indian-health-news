@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
 import { countFeed, getSourceProfile } from "@/core/reader";
 import { Listing } from "@/components/Hub";
+import { WithRail } from "@/components/Rail";
 import { first, pageMeta } from "@/lib/page";
 
 type Props = { params: Promise<{ slug: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> };
@@ -30,7 +31,7 @@ export default async function SourcePage({ params, searchParams }: Props) {
   const source = await getSourceProfile(db, slug);
   if (!source) notFound();
   return (
-    <>
+    <WithRail now={new Date()}>
       <p className="kicker">Source publisher</p>
       <h1 className="page-title">{source.name}</h1>
       <div className="prose">
@@ -52,6 +53,6 @@ export default async function SourcePage({ params, searchParams }: Props) {
       </div>
       <h2 className="section-title">Updates and reports citing this source</h2>
       <Listing db={db} now={new Date()} basePath={`/sources/${source.slug}`} before={first((await searchParams).before)} filter={{ sourceId: source.id }} empty={<p>Nothing from this source is public at the moment.</p>} />
-    </>
+    </WithRail>
   );
 }

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
 import { countFeed, getAuthor } from "@/core/reader";
 import { Listing } from "@/components/Hub";
+import { WithRail } from "@/components/Rail";
 import { JsonLd } from "@/components/JsonLd";
 import { profileGraph } from "@/core/jsonld";
 import { first, pageMeta } from "@/lib/page";
@@ -29,7 +30,7 @@ export default async function AuthorPage({ params, searchParams }: Props) {
   if (!author) notFound();
   const roles = author.roles.map((r) => ROLE[r]).filter(Boolean);
   return (
-    <>
+    <WithRail now={new Date()}>
       <JsonLd graph={profileGraph({ origin: SITE_URL, name: SITE_NAME }, { name: author.name, slug: author.slug, bio: author.bio, jobTitle: roles[0] ?? null, credentials: author.credentials })} />
       <p className="kicker">{roles.join(" · ") || "Staff"}</p>
       <h1 className="page-title">{author.name}</h1>
@@ -47,6 +48,6 @@ export default async function AuthorPage({ params, searchParams }: Props) {
       </div>
       <h2 className="section-title">Recent work</h2>
       <Listing db={db} now={new Date()} basePath={`/authors/${author.slug}`} before={first((await searchParams).before)} filter={{ authorId: author.id }} empty={<p>No published reports yet.</p>} />
-    </>
+    </WithRail>
   );
 }

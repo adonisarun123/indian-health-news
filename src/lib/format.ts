@@ -32,3 +32,21 @@ export function isoIst(d: Date): string {
   const shifted = new Date(d.getTime() + 5.5 * 3600_000);
   return `${shifted.toISOString().slice(0, 19)}+05:30`;
 }
+
+/** "12:08 am" for today in IST, otherwise "19 Nov". Compact times for rails and strips. */
+export function compactTime(d: Date, now: Date = new Date()): string {
+  const day = (x: Date) => parts(x, { day: "numeric", month: "short", year: "numeric" });
+  const a = day(d);
+  const b = day(now);
+  if (a.day === b.day && a.month === b.month && a.year === b.year) {
+    const p = parts(d, { hour: "numeric", minute: "2-digit", hour12: true });
+    return `${p.hour}:${p.minute} ${String(p.dayPeriod).toLowerCase()}`;
+  }
+  return `${a.day} ${a.month}`;
+}
+
+/** "Friday, 20 November 2026" for the masthead date line. */
+export function mastheadDate(now: Date = new Date()): string {
+  const p = parts(now, { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+  return `${p.weekday}, ${p.day} ${p.month} ${p.year}`;
+}

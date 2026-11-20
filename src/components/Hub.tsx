@@ -10,7 +10,7 @@ export async function Listing({ db, now, basePath, before, filter = {}, empty, p
   if (items.length === 0) return <div className="note">{empty}</div>;
   return (
     <>
-      <FeedList items={items} now={now} twoCol />
+      <FeedList items={items} now={now} />
       <Pager newerHref={cursor ? basePath : null} olderHref={next ? `${basePath}?before=${encodeCursor(next)}` : null} />
     </>
   );

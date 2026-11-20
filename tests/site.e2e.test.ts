@@ -135,7 +135,10 @@ describe("public surfaces never leak private or removed content", () => {
 describe("index policy and labelling", () => {
   it("links a source card straight to the publisher and never to a local page", async () => {
     const home = await html("/");
-    expect(home.includes('<a class="read-at ext" href="https://health.example/notices/206" rel="noopener external">Read at State Health Bulletin')).toBe(true);
+    // The front page shows a card as a teaser: the headline links straight to the publisher, which is named.
+    expect(home).toMatch(/<a class="ext" href="https:\/\/health\.example\/notices\/206" rel="noopener external">[^<]+<span class="visually-hidden"> \(at State Health Bulletin\)<\/span><\/a>/);
+    // Listings keep the full card with its "Read at" link.
+    expect(await html("/latest")).toContain('<a class="read-at ext" href="https://health.example/notices/206" rel="noopener external">Read at State Health Bulletin');
     expect(home).not.toContain('href="/news/appointment');
     expect(home).toContain("Source update");
   });
