@@ -23,6 +23,10 @@ export interface FeedItem {
   articleType: string | null;
   standfirst: string | null;
   author: { name: string; slug: string } | null;
+  /** A verbatim official release: credited to its publisher, never to a staff byline. */
+  reproducedFrom: string | null;
+  /** Shown on cards in place of the standfirst for a reproduced release. */
+  release: { issuer: string | null; words: number } | null;
   section: { name: string; slug: string } | null;
   state: { name: string; slug: string } | null;
   /** The publisher's own publication time, shown on source cards. */
@@ -95,6 +99,8 @@ const COLUMNS = sql`
   fe.id, fe.kind, fe.display_title, fe.publisher_name, fe.target_url, fe.visible_from,
   a.type as article_type, a.modified_at, v.standfirst,
   p.display_name as author_name, p.slug as author_slug, p.has_public_profile as author_public,
+  case when a.canonical_url is not null then (select c.publisher_name from article_citations c where c.version_id = v.id and c.is_primary limit 1) end as reproduced_from,
+  a.source_issuer, case when a.canonical_url is not null then coalesce(array_length(regexp_split_to_array(btrim(v.body_text), '\s+'), 1), 0) end as release_words,
   sr.source_published_at, s.slug as source_slug,
   sec.slug as section_slug, sec.name as section_name,
   st.slug as state_slug, st.name as state_name`;
@@ -123,7 +129,9 @@ function toItem(r: Row): FeedItem {
     isExternal: kind === "source_card",
     articleType: (r.article_type as string) ?? null,
     standfirst: (r.standfirst as string) || null,
-    author: r.author_name && r.author_public ? { name: r.author_name as string, slug: r.author_slug as string } : r.author_name ? { name: r.author_name as string, slug: "" } : null,
+    reproducedFrom: (r.reproduced_from as string) ?? null,
+    release: r.reproduced_from ? { issuer: (r.source_issuer as string) ?? null, words: Number(r.release_words ?? 0) } : null,
+    author: r.reproduced_from ? null : r.author_name && r.author_public ? { name: r.author_name as string, slug: r.author_slug as string } : r.author_name ? { name: r.author_name as string, slug: "" } : null,
     section: r.section_slug ? { name: r.section_name as string, slug: r.section_slug as string } : null,
     state: r.state_slug ? { name: r.state_name as string, slug: r.state_slug as string } : null,
     sourcePublishedAt: r.source_published_at ? new Date(r.source_published_at as string) : null,
@@ -152,7 +160,7 @@ function filterSql(f: FeedFilter): SQL {
   }
   if (f.kind) parts.push(sql`fe.kind = ${f.kind}`);
   if (f.originalsOnly) parts.push(sql`fe.kind = 'article' and a.type in ('original_brief', 'original_report', 'analysis')`);
-  if (f.authorId) parts.push(sql`v.author_person_id = ${f.authorId}`);
+  if (f.authorId) parts.push(sql`v.author_person_id = ${f.authorId} and a.canonical_url is null`);
   if (f.excludeArticleId) parts.push(sql`(a.id is null or a.id <> ${f.excludeArticleId})`);
   if (f.sourceId) {
     parts.push(sql`((fe.kind = 'source_card' and s.id = ${f.sourceId})
@@ -470,7 +478,7 @@ export async function listSitemapArticles(db: Db, now: Date, opts: { since?: Dat
   const res = await db.execute<Row>(sql`
     select a.slug, fe.display_title, a.first_published_at, coalesce(a.modified_at, a.first_published_at) as lastmod
     ${publicFeed(now, "web")}
-      and fe.kind = 'article' and a.is_indexable ${since}
+      and fe.kind = 'article' and a.is_indexable and a.canonical_url is null ${since}
     order by a.first_published_at asc, a.id asc
     limit ${opts.limit} offset ${opts.offset}`);
   return res.rows.map((r) => ({ slug: r.slug as string, title: r.display_title as string, publishedAt: new Date(r.first_published_at as string), lastmod: new Date(r.lastmod as string) }));
@@ -478,7 +486,7 @@ export async function listSitemapArticles(db: Db, now: Date, opts: { since?: Dat
 
 export async function countSitemapArticles(db: Db, now: Date, since?: Date): Promise<number> {
   const cond = since ? sql`and a.first_published_at > ${iso(since)} and a.type <> 'licensed_copy'` : sql``;
-  const res = await db.execute<{ n: string }>(sql`select count(*) as n ${publicFeed(now, "web")} and fe.kind = 'article' and a.is_indexable ${cond}`);
+  const res = await db.execute<{ n: string }>(sql`select count(*) as n ${publicFeed(now, "web")} and fe.kind = 'article' and a.is_indexable and a.canonical_url is null ${cond}`);
   return Number(res.rows[0]?.n ?? 0);
 }
 

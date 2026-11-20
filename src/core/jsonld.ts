@@ -64,6 +64,8 @@ export interface ArticleLd {
   modifiedAt: Date | null;
   citations: string[];
   reviewer: { name: string; slug: string; hasProfile: boolean } | null;
+  /** A licensed copy or a verbatim official release: not our NewsArticle. */
+  reproduced?: boolean;
 }
 
 /**
@@ -85,7 +87,7 @@ export function articleGraph(site: SiteIdentity, a: ArticleLd): Graph {
     // reviewedBy belongs on the page, and only when the review is visible and recorded (SD table).
     page.reviewedBy = ref(`${site.origin}/authors/${a.reviewer.slug}#person`);
   }
-  if (a.type === "licensed_copy") {
+  if (a.type === "licensed_copy" || a.reproduced) {
     nodes.push({ "@type": "WebSite", "@id": `${site.origin}/#website`, name: site.name, url: `${site.origin}/` }, page);
     return { "@context": "https://schema.org", "@graph": nodes };
   }

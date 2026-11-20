@@ -105,6 +105,11 @@ export const createInput = z.strictObject({
   type: z.enum(["original_brief", "original_report", "analysis", "press_material"]),
   slug: z.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/).max(120).optional(),
   embargoUntil: z.iso.datetime({ offset: true }).nullable().optional(),
+  /** Press material only: the address of the original this story reproduces word for word. */
+  canonicalUrl: z.string().max(2048).refine((s) => s.startsWith("https://"), "must be a direct https link").nullable().optional(),
+  /** With canonicalUrl only: when the original was issued, and the issuing body. */
+  sourceIssuedAt: z.iso.datetime({ offset: true }).nullable().optional(),
+  sourceIssuer: z.string().min(1).max(200).nullable().optional(),
   headline: fields.headline,
   standfirst: fields.standfirst.default(""),
   body: fields.body,
@@ -293,14 +298,23 @@ async function contentOf(tx: Tx, versionId: string, articleId: string): Promise<
 export async function createArticle(db: Db, actor: Actor, raw: unknown, now: Date): Promise<CommandResult> {
   if (!has(actor, "reporter", "editor", "managing_editor")) throw new CommandError(403, "FORBIDDEN", "This account cannot write stories.");
   const input = parse(createInput, raw);
+  if ((input.sourceIssuedAt || input.sourceIssuer) && !input.canonicalUrl)
+    throw new CommandError(422, "VALIDATION_FAILED", "Issue details belong to a reproduced original.", { fieldErrors: [{ field: "sourceIssuedAt", code: "NOT_ALLOWED", message: "Set the original's address first." }] });
+  if (input.sourceIssuedAt && new Date(input.sourceIssuedAt) > now)
+    throw new CommandError(422, "VALIDATION_FAILED", "The original cannot be issued in the future.", { fieldErrors: [{ field: "sourceIssuedAt", code: "IN_FUTURE", message: "Use the time the original was issued." }] });
+  if (input.canonicalUrl) {
+    if (input.type !== "press_material") throw new CommandError(422, "VALIDATION_FAILED", "Only press material can point to an original elsewhere.", { fieldErrors: [{ field: "canonicalUrl", code: "NOT_ALLOWED", message: "Only press material can point to an original elsewhere." }] });
+    if (!input.citations.some((c) => c.isPrimary && c.url === input.canonicalUrl))
+      throw new CommandError(422, "VALIDATION_FAILED", "The original must be the primary source.", { fieldErrors: [{ field: "canonicalUrl", code: "NOT_PRIMARY_SOURCE", message: "The canonical address must be the primary source link." }] });
+  }
   return db.transaction(async (tx) => {
     const slug = await uniqueSlug(tx, "en-IN", input.slug ?? slugify(input.headline));
     const risk = assessRisk(`${input.headline} ${input.standfirst} ${bodyText(input.body)}`);
     const [article] = await tx
       .insert(articles)
-      .values({ slug, type: input.type, riskRoute: risk.route, embargoUntil: input.embargoUntil ? new Date(input.embargoUntil) : null, createdBy: actor.personId, createdAt: now, updatedAt: now })
+      .values({ slug, type: input.type, riskRoute: risk.route, embargoUntil: input.embargoUntil ? new Date(input.embargoUntil) : null, canonicalUrl: input.canonicalUrl ?? null, sourceIssuedAt: input.sourceIssuedAt ? new Date(input.sourceIssuedAt) : null, sourceIssuer: input.sourceIssuer ?? null, createdBy: actor.personId, createdAt: now, updatedAt: now })
       .returning();
-    const { type: _t, slug: _s, embargoUntil: _e, ...c } = input;
+    const { type: _t, slug: _s, embargoUntil: _e, canonicalUrl: _c, sourceIssuedAt: _si, sourceIssuer: _sr, ...c } = input;
     const version = await writeVersion(tx, article!.id, 1, { ...c, authorPersonId: c.authorPersonId ?? actor.personId }, actor.personId, now);
     await setTerms(tx, article!.id, input.sectionSlug, input.termSlugs);
     await tx.update(articles).set({ draftVersionId: version.id }).where(eq(articles.id, article!.id));
@@ -466,7 +480,7 @@ async function publishVersion(tx: Tx, article: typeof articles.$inferSelect, ver
   const [live] = await tx.select().from(feedEntries).where(and(eq(feedEntries.articleId, article.id), eq(feedEntries.status, "active")));
   if (live) await tx.update(feedEntries).set({ displayTitle: version!.headline, scope }).where(eq(feedEntries.id, live.id));
   else {
-    await tx.insert(feedEntries).values({ kind: "article", articleId: article.id, displayTitle: version!.headline, publisherName, targetUrl: `/news/${article.slug}`, visibleFrom: firstPublishedAt, scope, grantId: article.grantId });
+    await tx.insert(feedEntries).values({ kind: "article", articleId: article.id, displayTitle: version!.headline, publisherName, targetUrl: `/news/${article.slug}`, visibleFrom: article.sourceIssuedAt ?? firstPublishedAt, scope, grantId: article.grantId });
   }
   await emit(tx, {
     eventType: isCorrection ? "article.corrected" : "article.published",

@@ -240,3 +240,33 @@ the hub and policy-page thresholds recorded above (phase 2, items 2 and 6).
 - Known cost: republished releases duplicate their source, so search engines
   will usually prefer the original. Policy pages are indexed while they still
   show the "details to be confirmed" notice.
+
+## Verbatim PIB health releases, 20 November 2026
+
+The publisher asked for health ministry releases from the Press Information
+Bureau to be republished in full, citing PIB's reproduction terms.
+
+- **Canonical to PIB.** Press material that reproduces a release word for word
+  carries `articles.canonical_url` (migration `0005_canonical_url`), set only
+  at creation and only when it equals the primary source link. The page names
+  the PIB original as canonical, is credited "By Press Information Bureau" with
+  a "Republished from" strip, makes no `NewsArticle` claim in JSON-LD and is
+  left out of the sitemap and news sitemap. It stays in listings, hubs, search
+  and RSS. This avoids competing with the original in search; these pages are
+  not expected to bring search traffic.
+- **Selection.** Ministry of Health and Family Welfare releases from 1 July to
+  19 November 2026, English, Delhi region. Left out: releases already covered
+  by our own briefs, office housekeeping (Special Campaign, Swachhata, pledges,
+  vigilance week), previews later replaced by the event release, and one
+  duplicate. 148 releases.
+- **Risk screen overridden.** The keyword screen routed 112 of the 148 as
+  clinical or sensitive. With no medical reviewer on the roster, the publisher
+  chose to have the managing editor reclassify them as routine with a recorded
+  reason ("verbatim official release, no added claims"). Each override is in
+  the audit trail as `article.classify`. This departs from the SRS requirement
+  of medical sign-off for clinical items.
+- **Dates.** First-publication time is our own publication time. The standfirst
+  states the date PIB issued each release.
+- Text is converted from PIB's HTML to our blocks: paragraphs, headings, lists;
+  tables become lists of rows joined with dashes; photos and embedded links are
+  not carried over. Staff sign-off lines and release IDs are dropped.

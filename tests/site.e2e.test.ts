@@ -189,6 +189,24 @@ describe("newsroom and staff API (ADM-01, ADM-02, SEC-02, AT-14)", () => {
     fetch(base + path, { method, redirect: "manual", headers: { "Content-Type": "application/json", ...(cookie ? { Cookie: cookie } : {}), ...(origin ? { Origin: origin } : {}) }, body: JSON.stringify(body) });
   const draft = { type: "original_brief", headline: "Private newsroom draft about tender dates", standfirst: "Not for readers yet.", body: [{ type: "paragraph", text: "Working text about the tender calendar." }], sectionSlug: "policy", contribution: "local_reporting", contributionNote: "Spoke to the tender office.", citations: [{ url: "https://health.example/notices/300", label: "Tender notice", publisherName: "State Health Bulletin", isPrimary: true }] };
 
+  it("opens on the dashboard for signed-in staff, with the queue one link away", async () => {
+    const cookie = await cookieFor("editor");
+    const page = async (path: string) => (await (await fetch(base + path, { redirect: "manual", headers: { Cookie: cookie } })).text()).replaceAll("<!-- -->", "");
+    const dash = await page("/newsroom");
+    expect(dash).toContain("<h1>Dashboard</h1>");
+    for (const text of ["Needs attention", "Published today", "Live on the site", "Sources and rights", "Intake and background work", 'href="/newsroom/queue"']) expect(dash, text).toContain(text);
+    // The chart is server-rendered SVG: no script is needed to read it.
+    expect(dash).toMatch(/<svg[^>]+role="img"/);
+    expect(await page("/newsroom/queue")).toContain("<h1>Queue</h1>");
+    // Optional: keep a self-contained copy of the page for a visual check.
+    if (process.env.SNAPSHOT_DIR) {
+      const css = await Promise.all([...dash.matchAll(/<link rel="stylesheet" href="([^"]+)"/g)].map(async (m) => (await get(m[1]!)).text()));
+      const { mkdir, writeFile } = await import("node:fs/promises");
+      await mkdir(process.env.SNAPSHOT_DIR, { recursive: true });
+      await writeFile(`${process.env.SNAPSHOT_DIR}/dashboard.html`, dash.replace("</head>", `<style>${css.join("\n")}</style></head>`).replace(/<script\b[^>]*>[\s\S]*?<\/script>/g, ""));
+    }
+  });
+
   it("keeps the newsroom and previews behind sign-in, uncached and unindexed", async () => {
     for (const path of ["/newsroom", "/newsroom/queue", "/newsroom/stories", "/newsroom/settings", "/newsroom/stories/00000000-0000-0000-0000-000000000000/preview"]) {
       const res = await get(path);
@@ -320,6 +338,7 @@ describe("discovery outputs and cache invalidation (SEO-02, SD, ARC-02)", () => 
     for (const absent of ["private-draft", "device-procurement-workshop-dates", "bengaluru-hospital-board-schedule", "journal-submission-window"]) expect(articlesXml, absent).not.toContain(absent);
     const pagesXml = await (await get("/sitemaps/pages.xml")).text();
     expect(pagesXml).toContain(`<loc>${ORIGIN}/corrections</loc>`);
+    expect(pagesXml).toContain(`<loc>${ORIGIN}/submit-news</loc>`);
     expect(pagesXml).toContain(`<loc>${ORIGIN}/privacy</loc>`);
     expect(pagesXml).not.toContain("/search");
     expect((await get("/sitemaps/articles-2.xml")).status).toBe(404);

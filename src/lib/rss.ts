@@ -10,7 +10,7 @@ import { xml, xmlEscape } from "./xml";
 export function rss(o: { title: string; description: string; path: string; selfPath: string; items: FeedItem[] }): Response {
   const items = o.items.map((i) => {
     const link = i.isExternal ? i.url : absolute(i.url);
-    const description = i.isExternal ? `Source update from ${i.publisher}. Read it at the publisher's site.` : (i.standfirst ?? "");
+    const description = i.isExternal ? `Source update from ${i.publisher}. Read it at the publisher's site.` : (i.release ? `Press release${i.release.issuer ? ` from the ${i.release.issuer}` : ""}, republished from ${i.reproducedFrom}.` : (i.standfirst ?? ""));
     return `    <item>
       <title>${xmlEscape(i.title)}</title>
       <link>${xmlEscape(link)}</link>

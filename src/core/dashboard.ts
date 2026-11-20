@@ -195,6 +195,7 @@ export function attention(d: Dashboard): Attention[] {
   if (d.stories.needEditor) info(`${plural(d.stories.needEditor, "story", "stories")} waiting for an editor.`, "/newsroom/stories?status=in_review");
   if (d.stories.needMedical) info(`${plural(d.stories.needMedical, "story", "stories")} waiting for medical review.`, "/newsroom/stories?status=in_review");
   if (d.stories.byStatus.approved) info(`${plural(d.stories.byStatus.approved, "approved story", "approved stories")} not yet published.`, "/newsroom/stories?status=approved");
+  if (d.stories.byStatus.draft) info(`${plural(d.stories.byStatus.draft, "draft")} not yet sent for review.`, "/newsroom/stories?status=draft");
   if (d.waiting.total) info(`${plural(d.waiting.total, "source item")} waiting in the queue.`, "/newsroom/queue");
   return out;
 }

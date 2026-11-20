@@ -22,12 +22,27 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = { width: "device-width", initialScale: 1, themeColor: "#0a2540" };
 
+const FOOTER_PUBLICATION: [string, string][] = [
+  ["/about", "About"],
+  ["/editorial-policy", "Editorial policy"],
+  ["/corrections", "Corrections"],
+  ["/contact", "Contact"],
+];
+const FOOTER_READERS: [string, string][] = [
+  ["/submit-news", "Submit news"],
+  ["/corrections#report", "Report an error"],
+  ["/complaints", "Complaints"],
+  ["/privacy", "Privacy"],
+  ["/terms", "Terms"],
+];
+
 const SHORT: Record<string, string> = { policy: "Policy", "medicines-devices": "Medicines", "healthcare-delivery": "Healthcare", "public-health": "Public Health" };
 
 export default async function RootLayout({ children }: { children: ReactNode }) {
   const db = getDb();
   const now = new Date();
   const { sections, states, breaking } = await cached(["layout-nav"], [TAG_FEED], async () => ({ sections: await listSections(db), states: await listTermsWithContent(db, "state", now), breaking: await getBreaking(db, now) }));
+  const year = new Intl.DateTimeFormat("en-IN", { timeZone: "Asia/Kolkata", year: "numeric" }).format(now);
   const tabs = [{ href: "/", label: "Latest" }, ...sections.map((s) => ({ href: `/section/${s.slug}`, label: SHORT[s.slug] ?? s.name })), { href: "/states", label: "States" }];
 
   return (
@@ -73,6 +88,9 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
                     <Link href="/search">Search</Link>
                   </li>
                   <li>
+                    <Link href="/submit-news">Submit news</Link>
+                  </li>
+                  <li>
                     <Link href="/about">About</Link>
                   </li>
                   <li>
@@ -84,12 +102,17 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
             <Link className="masthead-title" href="/">
               {SITE_NAME}
             </Link>
-            <Link className="icon-button" href="/search" aria-label="Search">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-                <circle cx="10.5" cy="10.5" r="6" />
-                <path d="M15 15l5.5 5.5" />
-              </svg>
-            </Link>
+            <div className="masthead-actions">
+              <Link className="masthead-cta" href="/submit-news">
+                Submit news
+              </Link>
+              <Link className="icon-button" href="/search" aria-label="Search">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+                  <circle cx="10.5" cy="10.5" r="6" />
+                  <path d="M15 15l5.5 5.5" />
+                </svg>
+              </Link>
+            </div>
           </div>
         </header>
         <Tabs items={tabs} />
@@ -113,24 +136,59 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
         </main>
         <footer className="footer">
           <div className="wrap">
-            <nav aria-label="About this publication">
-              <ul>
-                {[
-                  ["/about", "About"],
-                  ["/editorial-policy", "Editorial policy"],
-                  ["/corrections", "Corrections"],
-                  ["/contact", "Contact"],
-                  ["/complaints", "Complaints"],
-                  ["/privacy", "Privacy"],
-                  ["/terms", "Terms"],
-                ].map(([href, label]) => (
-                  <li key={href}>
-                    <Link href={href!}>{label}</Link>
+            <div className="footer-grid">
+              <div className="footer-brand">
+                <p className="footer-name">{SITE_NAME}</p>
+                <p>{SITE_TAGLINE}</p>
+                <p>
+                  <Link className="footer-cta" href="/submit-news">
+                    Submit news
+                  </Link>
+                </p>
+              </div>
+              <nav aria-labelledby="footer-sections">
+                <h2 id="footer-sections">Sections</h2>
+                <ul>
+                  <li>
+                    <Link href="/latest">Latest updates</Link>
                   </li>
-                ))}
-              </ul>
-            </nav>
-            <p>{SITE_NAME}. All times are Indian Standard Time. Source updates link to the original publisher.</p>
+                  {sections.map((s) => (
+                    <li key={s.slug}>
+                      <Link href={`/section/${s.slug}`}>{s.name}</Link>
+                    </li>
+                  ))}
+                  <li>
+                    <Link href="/states">States</Link>
+                  </li>
+                </ul>
+              </nav>
+              <nav aria-labelledby="footer-publication">
+                <h2 id="footer-publication">Publication</h2>
+                <ul>
+                  {FOOTER_PUBLICATION.map(([href, label]) => (
+                    <li key={href}>
+                      <Link href={href}>{label}</Link>
+                    </li>
+                  ))}
+                </ul>
+              </nav>
+              <nav aria-labelledby="footer-readers">
+                <h2 id="footer-readers">For readers</h2>
+                <ul>
+                  {FOOTER_READERS.map(([href, label]) => (
+                    <li key={href}>
+                      <Link href={href}>{label}</Link>
+                    </li>
+                  ))}
+                  <li>
+                    <a href="/feed.xml">RSS feed</a>
+                  </li>
+                </ul>
+              </nav>
+            </div>
+            <p className="footer-base">
+              © {year} {SITE_NAME}. All times are Indian Standard Time. Source updates link to the original publisher.
+            </p>
           </div>
         </footer>
       </body>
