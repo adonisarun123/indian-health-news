@@ -6,10 +6,10 @@ const security = [
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   { key: "Permissions-Policy", value: "geolocation=(), camera=(), microphone=(), payment=()" },
   { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains" },
-  // No third-party scripts, frames or form targets. Inline is allowed because the framework emits inline bootstrap scripts.
+  // Third-party scripts are limited to Google Tag Manager and Google Analytics. Inline is allowed because the framework emits inline bootstrap scripts.
   {
     key: "Content-Security-Policy",
-    value: ["default-src 'self'", "script-src 'self' 'unsafe-inline'", "style-src 'self' 'unsafe-inline'", "img-src 'self' data:", "font-src 'self'", "connect-src 'self'", "object-src 'none'", "base-uri 'self'", "form-action 'self'", "frame-ancestors 'none'"].join("; "),
+    value: ["default-src 'self'", "script-src 'self' 'unsafe-inline' https://*.googletagmanager.com", "style-src 'self' 'unsafe-inline'", "img-src 'self' data: https://*.google-analytics.com https://*.googletagmanager.com", "font-src 'self'", "connect-src 'self' https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com", "object-src 'none'", "base-uri 'self'", "form-action 'self'", "frame-ancestors 'none'"].join("; "),
   },
 ];
 // Private surfaces are never cached and never indexed (SEC-02).

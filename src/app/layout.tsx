@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import Link from "next/link";
+import Script from "next/script";
 import type { ReactNode } from "react";
 import { getDb } from "@/db/client";
 import { getBreaking, listSections, listTermsWithContent } from "@/core/reader";
@@ -19,6 +20,7 @@ export const metadata: Metadata = {
   description: SITE_TAGLINE,
   robots: { index: false, follow: true },
   alternates: { types: { "application/rss+xml": "/feed.xml" } },
+  verification: { google: "iK4MTFI25PreoL411_8ECjE2jRN_4mz_clfsTWH0GDA" },
 };
 
 export const viewport: Viewport = { width: "device-width", initialScale: 1, themeColor: "#ffffff" };
@@ -49,6 +51,12 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   return (
     <html lang="en-IN">
       <body>
+        <Script id="gtm-init" strategy="afterInteractive">
+          {`window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());`}
+        </Script>
+        <Script id="gtm" strategy="afterInteractive" src="https://www.googletagmanager.com/gtm.js?id=GTM-K9KXTT78" />
         <a className="skip-link" href="#content">
           Skip to content
         </a>

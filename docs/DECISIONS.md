@@ -107,7 +107,7 @@ the 170 KiB budget (OPS-02), measured on a local production build.
 **Phase 5, hardening**
 - Reconciliation after a restore: suppression decisions are reapplied, lost
   scheduled jobs restored, stories without a source reported (OPS-03).
-- Security headers and a content security policy with no third-party origins.
+- Security headers and a content security policy. The only third-party origins are Google Tag Manager and Google Analytics (added Nov 2026 for GTM-K9KXTT78).
 - 68 passing tests: 52 in `npm test`, 16 over HTTP in `npm run test:site`.
 
 ### Acceptance test status
