@@ -43,6 +43,13 @@
       "when": 1795114319603,
       "tag": "0005_canonical_url",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1795140039868,
+      "tag": "0006_source_issued",
+      "breakpoints": true
     }
   ]
 }

@@ -25,6 +25,8 @@ export interface FeedItem {
   author: { name: string; slug: string } | null;
   /** A verbatim official release: credited to its publisher, never to a staff byline. */
   reproducedFrom: string | null;
+  /** Shown on cards in place of the standfirst for a reproduced release. */
+  release: { issuer: string | null; words: number } | null;
   section: { name: string; slug: string } | null;
   state: { name: string; slug: string } | null;
   /** The publisher's own publication time, shown on source cards. */
@@ -98,6 +100,7 @@ const COLUMNS = sql`
   a.type as article_type, a.modified_at, v.standfirst,
   p.display_name as author_name, p.slug as author_slug, p.has_public_profile as author_public,
   case when a.canonical_url is not null then (select c.publisher_name from article_citations c where c.version_id = v.id and c.is_primary limit 1) end as reproduced_from,
+  a.source_issuer, case when a.canonical_url is not null then coalesce(array_length(regexp_split_to_array(btrim(v.body_text), '\s+'), 1), 0) end as release_words,
   sr.source_published_at, s.slug as source_slug,
   sec.slug as section_slug, sec.name as section_name,
   st.slug as state_slug, st.name as state_name`;
@@ -127,6 +130,7 @@ function toItem(r: Row): FeedItem {
     articleType: (r.article_type as string) ?? null,
     standfirst: (r.standfirst as string) || null,
     reproducedFrom: (r.reproduced_from as string) ?? null,
+    release: r.reproduced_from ? { issuer: (r.source_issuer as string) ?? null, words: Number(r.release_words ?? 0) } : null,
     author: r.reproduced_from ? null : r.author_name && r.author_public ? { name: r.author_name as string, slug: r.author_slug as string } : r.author_name ? { name: r.author_name as string, slug: "" } : null,
     section: r.section_slug ? { name: r.section_name as string, slug: r.section_slug as string } : null,
     state: r.state_slug ? { name: r.state_name as string, slug: r.state_slug as string } : null,

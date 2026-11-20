@@ -134,7 +134,17 @@ export default async function ArticlePage({ params }: Props) {
         )}
       </p>
       <p className="meta">
-        Published <time dateTime={isoIst(a.publishedAt)}>{longDateTime(a.publishedAt)}</time>
+        {a.sourceIssuedAt ? (
+          <>
+            {a.sourceIssuer ? `Issued by the ${a.sourceIssuer}` : "Issued"} on <time dateTime={isoIst(a.sourceIssuedAt)}>{longDateTime(a.sourceIssuedAt)}</time>
+            <br />
+            Republished here <time dateTime={isoIst(a.publishedAt)}>{longDateTime(a.publishedAt)}</time>
+          </>
+        ) : (
+          <>
+            Published <time dateTime={isoIst(a.publishedAt)}>{longDateTime(a.publishedAt)}</time>
+          </>
+        )}
         {a.modifiedAt && (
           <>
             <br />

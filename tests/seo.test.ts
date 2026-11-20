@@ -183,4 +183,24 @@ describe("verbatim official releases (publisher decision, 20 Nov 2026)", () => {
     const graph = JSON.stringify(articleGraph({ origin: "https://news.test", name: "Test" }, { slug: "pib-gsdp-draft", type: "press_material", reproduced: true, headline: release.headline, section: null, author: null, publishedAt: at(1), modifiedAt: null, citations: [], reviewer: null }));
     expect(graph).not.toContain("NewsArticle");
   });
+
+  it("lists a release at the time it was issued, with release details in place of the standfirst", async () => {
+    const editor = await ctx.actor("editor");
+    const issued = "2026-07-24T17:30:00+05:30";
+    await expect(createArticle(ctx.db, editor, { ...release, slug: "x3", canonicalUrl: undefined, citations: release.citations, sourceIssuedAt: issued }, T0)).rejects.toMatchObject({ status: 422 });
+    await expect(createArticle(ctx.db, editor, { ...release, slug: "x4", sourceIssuedAt: "2027-01-01T00:00:00+05:30" }, T0)).rejects.toMatchObject({ status: 422 });
+    const made = await createArticle(ctx.db, editor, { ...release, slug: "pib-july", canonicalUrl: "https://pib.gov.in/PressReleasePage.aspx?PRID=1", citations: [{ ...release.citations[0], url: "https://pib.gov.in/PressReleasePage.aspx?PRID=1" }], sourceIssuedAt: issued, sourceIssuer: "Ministry of Health and Family Welfare" }, T0);
+    let v = made.version;
+    for (const action of ["submit", "approve-editorial", "publish"] as const) v = (await performAction(ctx.db, editor, made.id, { action, expectedVersion: v, idempotencyKey: key() }, at(3))).version;
+
+    const r = await getPublicArticle(ctx.db, "pib-july", at(4));
+    if (r.kind !== "ok") throw new Error(r.kind);
+    expect(r.article.sourceIssuedAt).toEqual(new Date(issued));
+    expect(r.article.publishedAt).toEqual(at(3));
+    const feed = await listPublicFeed(ctx.db, at(4));
+    const item = feed.find((f) => f.url === "/news/pib-july")!;
+    expect(item.visibleFrom).toEqual(new Date(issued));
+    // Older than the release published earlier in this suite, so it sorts after it.
+    expect(feed.findIndex((f) => f.url === "/news/pib-july")).toBeGreaterThan(feed.findIndex((f) => f.url === "/news/pib-gsdp-draft"));
+  });
 });

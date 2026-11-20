@@ -38,8 +38,17 @@ export function StoryItem({ item, now }: { item: FeedItem; now: Date }) {
       <h3>
         <Link href={item.url}>{item.title}</Link>
       </h3>
-      {item.standfirst && <p className="standfirst">{item.standfirst}</p>}
+      {item.release ? (
+        <p className="meta">
+          {item.release.issuer && <>{item.release.issuer} · </>}
+          {item.section && <>{item.section.name} · </>}
+          {Math.max(1, Math.round(item.release.words / 200))} min read
+        </p>
+      ) : (
+        item.standfirst && <p className="standfirst">{item.standfirst}</p>
+      )}
       <p className="meta">
+        {item.release && "Issued "}
         {item.author && <>{item.author.name} · </>}
         <Time date={item.visibleFrom} now={now} />
         {item.state && <> · {item.state.name}</>}
