@@ -49,9 +49,10 @@ export function HeadlineLink({ item }: { item: FeedItem }) {
   );
 }
 
-/** Standfirst, or for a reproduced release the issuing body, section and reading time. */
+/** Standfirst. For a reproduced release, its own opening words, or failing that the section and reading time. */
 function Dek({ item }: { item: FeedItem }) {
   if (item.release) {
+    if (item.release.excerpt) return <p className="dek">{item.release.excerpt}</p>;
     return (
       <p className="dek">
         {item.section && <>{item.section.name} · </>}
@@ -99,7 +100,7 @@ export function StoryItem({ item, now }: { item: FeedItem; now: Date }) {
 }
 
 /** A teaser for the front page and rails, sized by `size`. */
-export function Teaser({ item, now, size = "s", dek = false, kicker = true, as: H = "h3" }: { item: FeedItem; now: Date; size?: "xl" | "l" | "m" | "s"; dek?: boolean; kicker?: boolean; as?: "h2" | "h3" }) {
+export function Teaser({ item, now, size = "s", dek = false, kicker = true, as: H = "h3" }: { item: FeedItem; now: Date; size?: "xl" | "l" | "m" | "s"; dek?: boolean; kicker?: boolean; as?: "h2" | "h3" | "h4" }) {
   return (
     <article className={`teaser teaser-${size}`}>
       {kicker && <p className="kicker">{kickerFor(item)}</p>}

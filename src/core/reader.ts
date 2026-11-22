@@ -25,8 +25,8 @@ export interface FeedItem {
   author: { name: string; slug: string } | null;
   /** A verbatim official release: credited to its publisher, never to a staff byline. */
   reproducedFrom: string | null;
-  /** Shown on cards in place of the standfirst for a reproduced release. */
-  release: { issuer: string | null; words: number } | null;
+  /** Shown on cards in place of the standfirst for a reproduced release. `excerpt` is the release's own opening words. */
+  release: { issuer: string | null; words: number; excerpt: string | null } | null;
   section: { name: string; slug: string } | null;
   state: { name: string; slug: string } | null;
   /** The publisher's own publication time, shown on source cards. */
@@ -101,6 +101,7 @@ const COLUMNS = sql`
   p.display_name as author_name, p.slug as author_slug, p.has_public_profile as author_public,
   case when a.canonical_url is not null then (select c.publisher_name from article_citations c where c.version_id = v.id and c.is_primary limit 1) end as reproduced_from,
   a.source_issuer, case when a.canonical_url is not null then coalesce(array_length(regexp_split_to_array(btrim(v.body_text), '\s+'), 1), 0) end as release_words,
+  case when a.canonical_url is not null then left(btrim(v.body_text), 480) end as release_head,
   sr.source_published_at, s.slug as source_slug,
   sec.slug as section_slug, sec.name as section_name,
   st.slug as state_slug, st.name as state_name`;
@@ -117,6 +118,21 @@ const TAXONOMY = sql`
       or (fe.kind = 'source_card' and t.id = s.jurisdiction_term_id))
     order by t.name limit 1) st on true`;
 
+/**
+ * The opening of a reproduced release, cut at a sentence end where one falls
+ * in range and at a word otherwise. The words are the issuer's own: nothing
+ * is rewritten. Honorifics such as "Smt." and "Dr." do not count as an end.
+ */
+export function excerptOf(head: string | null, max = 220): string | null {
+  const flat = (head ?? "").replace(/\s+/g, " ").trim();
+  if (!flat) return null;
+  if (flat.length <= max) return flat;
+  const window = flat.slice(0, max);
+  const ends = [...window.matchAll(/(?<=[a-z0-9)\]’”"]{3})[.!?](?=\s+[A-Z0-9“"‘(])/g)].map((m) => m.index).filter((i) => i >= 80);
+  if (ends.length > 0) return window.slice(0, ends[0]! + 1);
+  return `${window.slice(0, window.lastIndexOf(" ")).replace(/[\s,;:–—-]+$/, "")}…`;
+}
+
 function toItem(r: Row): FeedItem {
   const kind = r.kind as FeedItem["kind"];
   return {
@@ -130,7 +146,7 @@ function toItem(r: Row): FeedItem {
     articleType: (r.article_type as string) ?? null,
     standfirst: (r.standfirst as string) || null,
     reproducedFrom: (r.reproduced_from as string) ?? null,
-    release: r.reproduced_from ? { issuer: (r.source_issuer as string) ?? null, words: Number(r.release_words ?? 0) } : null,
+    release: r.reproduced_from ? { issuer: (r.source_issuer as string) ?? null, words: Number(r.release_words ?? 0), excerpt: excerptOf((r.release_head as string) ?? null) } : null,
     author: r.reproduced_from ? null : r.author_name && r.author_public ? { name: r.author_name as string, slug: r.author_slug as string } : r.author_name ? { name: r.author_name as string, slug: "" } : null,
     section: r.section_slug ? { name: r.section_name as string, slug: r.section_slug as string } : null,
     state: r.state_slug ? { name: r.state_name as string, slug: r.state_slug as string } : null,
@@ -287,9 +303,9 @@ export async function listTermsWithContent(db: Db, kind: TermKind, now: Date): P
   return res.rows.map((r) => ({ slug: r.slug, name: r.name, count: Number(r.n) }));
 }
 
-export async function listSections(db: Db): Promise<{ slug: string; name: string }[]> {
+export async function listSections(db: Db): Promise<{ id: string; slug: string; name: string }[]> {
   const order = ["public-health", "policy", "research", "medicines-devices", "healthcare-delivery"];
-  const rows = await db.select({ slug: terms.slug, name: terms.name }).from(terms).where(eq(terms.kind, "section"));
+  const rows = await db.select({ id: terms.id, slug: terms.slug, name: terms.name }).from(terms).where(eq(terms.kind, "section"));
   return rows.sort((a, b) => (order.indexOf(a.slug) + 99) % 99 - (order.indexOf(b.slug) + 99) % 99);
 }
 

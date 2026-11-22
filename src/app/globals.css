@@ -267,6 +267,10 @@ a:hover {
   overflow-x: auto;
   scrollbar-width: none;
   background: var(--paper);
+  /* Stays in reach on a long page. */
+  position: sticky;
+  top: 0;
+  z-index: 20;
 }
 .tabs::-webkit-scrollbar {
   display: none;
@@ -360,8 +364,7 @@ main.wrap {
 .section-title,
 .block-title,
 .block-label,
-.rail-title,
-.strip-title {
+.rail-title {
   font-family: var(--sans);
   font-size: 0.875rem;
   font-weight: 800;
@@ -375,8 +378,7 @@ main.wrap {
   border-top: 2px solid var(--rule-strong);
 }
 .block-title a,
-.rail-title a,
-.strip-title a {
+.rail-title a {
   color: inherit;
   text-decoration: none;
 }
@@ -446,53 +448,129 @@ main.wrap {
 }
 
 /* ── front page ── */
+/*
+ * The home page has four kinds of surface, so the eye gets a rhythm: a tinted
+ * lead panel, hairline columns, a full tinted band for ministry releases, and
+ * section cards under a coloured rule. Long release titles and excerpts are
+ * clamped; the full text is in the markup and on the story page.
+ */
+.edition {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.125rem 1rem;
+  margin-bottom: 1rem;
+}
+.edition-label {
+  font-size: 0.8125rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.edition-label::before,
+.rail-title::before {
+  content: "";
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--brand);
+  margin-right: 0.5rem;
+  vertical-align: 0.1em;
+}
+.edition-updated {
+  color: var(--muted);
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+}
 .front {
   display: grid;
-  gap: 1.5rem;
-  grid-template-areas: "lead" "stack" "rail";
+  gap: 2rem;
 }
-.front-lead {
-  grid-area: lead;
-}
-.front-stack {
-  grid-area: stack;
-}
+.front-main,
 .front-rail {
-  grid-area: rail;
+  min-width: 0;
 }
 .lead {
-  padding-bottom: 1.25rem;
+  display: grid;
+  gap: 0.75rem;
+  background: var(--tint-warm);
+  border-top: 3px solid var(--brand);
+  padding: 1.125rem 1.125rem 0.75rem;
 }
 .lead h2 {
-  font-size: clamp(1.875rem, 7.6vw, 2.75rem);
+  font-size: clamp(1.75rem, 7.2vw, 2.5rem);
   line-height: 1.1;
-  margin: 0.5rem 0 0.75rem;
 }
 .lead .standfirst {
   font-family: var(--serif);
-  font-size: 1.1875rem;
+  font-size: 1.125rem;
   line-height: 1.45;
   color: var(--ink-soft);
-  margin-bottom: 0.75rem;
-  max-width: 40rem;
+  max-width: 42rem;
 }
-.sub-leads {
-  display: grid;
-  gap: 1.25rem;
-  border-top: 1px solid var(--rule);
-  padding-top: 1.25rem;
+.lead-more,
+.see-all {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch);
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.lead-more::after,
+.see-all::after,
+.rail-more a::after {
+  content: "\2192";
+  margin-left: 0.375rem;
+}
+.lead-more:hover,
+.see-all:hover {
+  text-decoration: underline;
+}
+.top {
+  margin-top: 1.75rem;
 }
 .block-label {
   padding-bottom: 0.5rem;
   border-bottom: 2px solid var(--rule-strong);
-  margin-bottom: 0.25rem;
 }
-.front-stack .teaser {
+.top-grid,
+.desk-list,
+.card-list,
+.chips,
+.block-list,
+.more-grid,
+.related-grid,
+.inline-links {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.top-grid,
+.desk-list,
+.card-list,
+.block-list,
+.more-grid,
+.related-grid {
+  display: grid;
+}
+.top-grid li,
+.desk-list li,
+.card-list li,
+.block-list li,
+.more-grid li,
+.related-grid li {
   padding: 0.875rem 0;
-  border-bottom: 1px solid var(--rule);
+  border-top: 1px solid var(--rule);
+  min-width: 0;
 }
-.front-stack .teaser:last-child {
-  border-bottom: 0;
+.top-grid li:first-child,
+.desk-list li:first-child,
+.card-list li:first-child {
+  border-top: 0;
 }
 
 .teaser {
@@ -501,8 +579,14 @@ main.wrap {
   align-content: start;
 }
 .teaser-title {
+  /* Set in full: a teaser heading may be an h4, which the base heading rule does not cover. */
+  margin: 0;
+  font-family: var(--display);
   font-size: 1.125rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
   line-height: 1.25;
+  text-wrap: balance;
 }
 .teaser-m .teaser-title {
   font-size: 1.3125rem;
@@ -515,22 +599,27 @@ main.wrap {
   font-family: var(--serif);
   font-size: 1.0625rem;
 }
+/* Clamp on the home page only: listings and story pages show titles in full. */
+.home .teaser-title,
+.home .teaser .dek,
+.home .rail-list a {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  overflow: hidden;
+}
+.home .teaser-m .teaser-title,
+.home .teaser-l .teaser-title {
+  -webkit-line-clamp: 4;
+  line-clamp: 4;
+}
 
-/* Latest rail: time on its own line, headline below, hairlines between. */
+/* Latest: a timeline. Time above, headline below, a dot on the line for each. */
 .rail-title {
   padding: 0.5rem 0;
   border-top: 2px solid var(--rule-strong);
   border-bottom: 1px solid var(--rule);
-}
-.rail-title::before {
-  content: "";
-  display: inline-block;
-  width: 0.5rem;
-  height: 0.5rem;
-  border-radius: 50%;
-  background: var(--brand);
-  margin-right: 0.5rem;
-  vertical-align: 0.1em;
 }
 .rail-list {
   list-style: none;
@@ -557,6 +646,31 @@ main.wrap {
   text-transform: uppercase;
   letter-spacing: 0.03em;
 }
+.front-rail .rail-list {
+  margin: 0.5rem 0 0 0.25rem;
+  border-left: 1px solid var(--rule);
+}
+.front-rail .rail-list li {
+  position: relative;
+  padding: 0.625rem 0 0.875rem 1.125rem;
+  border-bottom: 0;
+}
+.front-rail .rail-list li::before {
+  content: "";
+  position: absolute;
+  left: -0.25rem;
+  top: 0.9375rem;
+  width: 0.4375rem;
+  height: 0.4375rem;
+  border-radius: 50%;
+  background: var(--paper);
+  border: 2px solid var(--brand);
+  box-sizing: content-box;
+  margin-left: -0.0625rem;
+}
+.front-rail .rail-list li:first-child::before {
+  background: var(--brand);
+}
 .rail-more {
   padding-top: 0.25rem;
 }
@@ -568,69 +682,127 @@ main.wrap {
   font-size: 0.875rem;
   text-decoration: none;
 }
-.rail-more a::after {
-  content: "\2192";
-  margin-left: 0.375rem;
-}
 
-/* Strip: a row of headlines between column rules. */
-.strip {
-  margin-top: 2rem;
-  padding: 1rem 0 0.25rem;
-  border-top: 2px solid var(--rule-strong);
-  border-bottom: 1px solid var(--rule);
+/* Ministry band: tinted to the edges of the page column, one white card per ministry. */
+.band {
+  margin: 2.5rem calc(var(--gutter) * -1) 0;
+  padding: 1.5rem var(--gutter) 1.75rem;
+  background: var(--tint);
 }
-.strip-title {
-  margin-bottom: 0.75rem;
+.band-head {
+  margin-bottom: 1rem;
+}
+.band-title {
+  font-size: 1.5rem;
+}
+.band-note {
+  color: var(--muted);
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+.desks {
+  display: grid;
+  gap: 1rem;
+}
+.desk {
+  background: var(--paper);
+  border-top: 3px solid var(--rule-strong);
+  padding: 0.875rem 1.125rem 0.25rem;
+  min-width: 0;
+}
+.desk-title {
+  font-family: var(--sans);
+  font-size: 0.8125rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   color: var(--brand);
 }
-.strip-list,
-.block-list,
-.more-grid,
-.related-grid,
-.inline-links {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-.strip-list {
-  display: grid;
-}
-.strip-list li {
-  padding: 0.75rem 0;
-  border-top: 1px solid var(--rule);
-}
-.strip-list li:first-child {
-  border-top: 0;
-  padding-top: 0;
-}
 
-/* Section blocks */
+/* Section blocks: a heading row with "see all", under a rule in the section's colour. */
 .block {
-  margin-top: 2.25rem;
+  margin-top: 2.5rem;
+  --section: var(--rule-strong);
+}
+.block[data-section="public-health"] {
+  --section: #a3122a;
+}
+.block[data-section="policy"] {
+  --section: #1f3a5f;
+}
+.block[data-section="research"] {
+  --section: #0f5f57;
+}
+.block[data-section="medicines-devices"] {
+  --section: #5a3d7a;
+}
+.block[data-section="healthcare-delivery"] {
+  --section: #8a5a12;
 }
 .block-title {
   padding-top: 0.625rem;
   border-top: 2px solid var(--rule-strong);
   margin-bottom: 1rem;
 }
+.block-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-top: 3px solid var(--section);
+  margin-bottom: 0.25rem;
+}
+.block-head .block-title {
+  padding: 0;
+  border: 0;
+  margin: 0;
+}
 .block-grid {
   display: grid;
   gap: 1rem;
+  padding-top: 0.5rem;
 }
 .block-grid.single {
   grid-template-columns: minmax(0, 1fr) !important;
 }
-.block-list,
-.more-grid,
-.related-grid {
+.section-grid {
   display: grid;
 }
-.block-list li,
-.more-grid li,
-.related-grid li {
-  padding: 0.875rem 0;
-  border-top: 1px solid var(--rule);
+.more-grid {
+  padding-top: 0.75rem;
+}
+.more-grid li:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding-top: 0.75rem;
+}
+.chips a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: var(--touch);
+  padding: 0 0.875rem;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  color: var(--ink);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+.chips a:hover {
+  border-color: var(--brand);
+  color: var(--brand);
+}
+.chip-count {
+  color: var(--muted);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
 }
 .inline-links {
   display: flex;
@@ -1213,35 +1385,50 @@ main.wrap {
   .masthead-cta {
     display: inline-flex;
   }
-  .front {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    grid-template-areas: "lead lead" "stack rail";
-    column-gap: 2rem;
+  .lead {
+    padding: 1.75rem 2rem 1.25rem;
   }
-  .sub-leads {
-    grid-template-columns: 1fr 1fr;
-    column-gap: 2rem;
+  .lead .standfirst {
+    font-size: 1.1875rem;
   }
-  .sub-leads {
-    row-gap: 1.5rem;
+  /* Two columns with a rule between; the first row has no rule above it. */
+  .top-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 3rem;
   }
-  .sub-leads .teaser:nth-child(even) {
+  .top-grid li:nth-child(2) {
+    border-top: 0;
+  }
+  .top-grid li:nth-child(even) {
+    position: relative;
+  }
+  .top-grid li:nth-child(even)::before {
+    content: "";
+    position: absolute;
+    left: -1.5rem;
+    top: 0.875rem;
+    bottom: 0.875rem;
     border-left: 1px solid var(--rule);
-    margin-left: -1rem;
-    padding-left: 1rem;
   }
-  .sub-leads .teaser:nth-child(n + 3) {
-    border-top: 1px solid var(--rule);
-    padding-top: 1.25rem;
-  }
-  .strip-list {
+  .front-rail .rail-list {
+    display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     column-gap: 2rem;
+    border-left: 0;
   }
-  .strip-list li,
-  .strip-list li:first-child {
-    border-top: 0;
-    padding-top: 0;
+  .front-rail .rail-list li {
+    border-left: 1px solid var(--rule);
+  }
+  .desks {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.5rem;
+  }
+  .desks.single {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .section-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 3rem;
   }
   .block-grid {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
@@ -1292,36 +1479,43 @@ main.wrap {
     justify-content: center;
   }
   .front {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 2.1fr) minmax(0, 1fr);
-    grid-template-areas: "stack lead rail";
-    column-gap: 0;
+    grid-template-columns: minmax(0, 1fr) 20rem;
+    column-gap: 2.5rem;
     align-items: start;
   }
-  .front > * {
-    padding: 0 1.5rem;
-  }
-  .front > .front-stack {
-    padding-left: 0;
-    border-right: 1px solid var(--rule);
-  }
-  .front > .front-rail {
-    padding-right: 0;
-    border-left: 1px solid var(--rule);
+  .lead {
+    padding: 2rem 2.25rem 1.375rem;
   }
   .lead h2 {
-    font-size: clamp(2.25rem, 3.2vw, 2.875rem);
+    font-size: clamp(2.25rem, 3.4vw, 3rem);
+    line-height: 1.06;
   }
-  .strip-list {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    column-gap: 0;
-  }
-  .strip-list li {
-    padding: 0 1.25rem;
+  .front-rail .rail-list {
+    display: block;
     border-left: 1px solid var(--rule);
   }
-  .strip-list li:first-child {
-    padding-left: 0;
+  .front-rail .rail-list li {
     border-left: 0;
+  }
+  .band {
+    margin-left: 0;
+    margin-right: 0;
+    padding: 1.75rem 2rem 2rem;
+  }
+  .band-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 2rem;
+  }
+  .band-note {
+    margin-top: 0;
+    text-align: right;
+  }
+  .lead-more,
+  .see-all,
+  .chips a {
+    min-height: 2.25rem;
   }
   .block-grid {
     grid-template-columns: minmax(0, 1.25fr) minmax(0, 1.75fr);
