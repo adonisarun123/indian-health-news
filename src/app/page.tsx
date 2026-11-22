@@ -47,8 +47,10 @@ export default async function Home() {
   };
   const subLeads = take(4, isOwn);
   const topStories = take(5, isOwn);
-  const releases = take(4, isRepublished);
+  // The rail takes the newest items first. Filling the releases strip before it
+  // moved the newest releases down the page and left the rail a day behind.
   const latest = take(9);
+  const releases = take(4, isRepublished);
   const blocks = sections.map((s) => ({ ...s, items: take(5, (i) => i.section?.slug === s.slug) })).filter((b) => b.items.length > 0);
   const more = take(8);
 
