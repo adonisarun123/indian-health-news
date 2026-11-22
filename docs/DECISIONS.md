@@ -270,3 +270,39 @@ Bureau to be republished in full, citing PIB's reproduction terms.
 - Text is converted from PIB's HTML to our blocks: paragraphs, headings, lists;
   tables become lists of rows joined with dashes; photos and embedded links are
   not carried over. Staff sign-off lines and release IDs are dropped.
+
+## More PIB releases and a repeatable importer, 22 November 2026
+
+The publisher asked for more PIB releases and chose the scope: Health Ministry
+releases issued since the first batch, Health Ministry releases from January to
+June 2026, and Ministry of Ayush releases from July to November 2026.
+
+- **Importer.** `scripts/pib-import.ts` (`npm run pib`) replaces the one-off
+  run. `fetch` reads PIB's English listing for a ministry and month range,
+  converts each release to blocks and writes a file under `scripts/pib/` that
+  can be read before anything is published. `publish` runs each prepared
+  release through the newsroom commands: create, reclassify, submit, approve,
+  publish. Releases already on the site are skipped, so both steps can be
+  repeated. PIB cannot be reached from every network; run it from a machine
+  that can open pib.gov.in.
+- **Same treatment as the first batch.** Press material, canonical to PIB,
+  credited to PIB, issue time and issuing ministry recorded, out of the
+  sitemaps. Subheadings above the PIB text, photos, embedded links and staff
+  sign-off lines are not carried over; tables become dash-separated lists.
+- **Ayush is a second issuer.** `source_issuer` is "Ministry of Ayush" for
+  those releases. This widens "health ministry releases" to a second ministry
+  on the publisher's instruction.
+- **Left out.** Office housekeeping (Special Campaign, Swachhata, Hindi
+  committee, finance committee meetings), announcements of an event that a
+  later release covers, releases with almost no text, and two items that were
+  not health news. Each prepared file lists what was left out and why.
+- **Risk screen overridden again.** The publisher chose the same handling as
+  on 20 November: releases the keyword screen routed as clinical or sensitive
+  were reclassified as routine by the managing editor with a recorded reason
+  and published without medical review. Every override is in the audit trail
+  as `article.classify`. The departure from the SRS stands.
+- **Sections are a first guess** from keywords in the headline. They are not
+  an editor's judgement and some will be wrong; a story can be moved in the
+  newsroom.
+- The prepared files hold PIB's text and are not committed
+  (`scripts/pib/*.json` is ignored).

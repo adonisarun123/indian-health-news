@@ -8,3 +8,4 @@ next-env.d.ts
 coverage/
 .DS_Store
 indian-health-news/
+scripts/pib/*.json
