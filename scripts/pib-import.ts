@@ -5,6 +5,7 @@
  *   npm run pib -- fetch --ministry 31 --months 2026-01..2026-06 --out scripts/pib/health-2026-h1.json
  *   npm run pib -- fetch --ministry 31 --months 2026-11 --after-prid 2338316 --out scripts/pib/health-new.json
  *   npm run pib -- fetch --ministry 31 --prids 2237403,2237404 --out scripts/pib/extra.json
+ *   npm run pib -- daily --as you@example.com --override-risk     (everything new this month, both ministries)
  *   npm run pib -- publish scripts/pib/health-new.json --as you@example.com [--override-risk]
  *
  * `fetch` reads PIB's English listing for one ministry (31 Health and Family Welfare,
@@ -398,9 +399,30 @@ async function runPublish() {
   console.log(`\n${JSON.stringify(tally)}`);
 }
 
+/** Everything new this month from every ministry we carry. Safe to run any number of times a day. */
+async function runDaily() {
+  const email = opt("--as");
+  const override = args.includes("--override-risk");
+  if (!email) throw new Error("Usage: daily --as <staff email> [--override-risk]");
+  const ist = new Date(Date.now() + 5.5 * 3_600_000); // IST wall clock, read through the UTC getters
+  const ym = (d: Date) => `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
+  const previous = new Date(Date.UTC(ist.getUTCFullYear(), ist.getUTCMonth() - 1, 1));
+  // Early in a month, look back as well: late releases and missed days are picked up.
+  const months = ist.getUTCDate() <= 3 ? `${ym(previous)}..${ym(ist)}` : ym(ist);
+  for (const ministry of Object.keys(ISSUERS)) {
+    const out = `scripts/pib/daily-${ist.toISOString().slice(0, 10)}-${ministry}.json`;
+    console.log(`\n== ${ISSUERS[ministry]} ${months}`);
+    args.splice(0, args.length, "fetch", "--ministry", ministry, "--months", months, "--out", out);
+    await runFetch();
+    args.splice(0, args.length, "publish", out, "--as", email, ...(override ? ["--override-risk"] : []));
+    await runPublish();
+  }
+}
+
 if (args[0] === "fetch") await runFetch();
+else if (args[0] === "daily") await runDaily();
 else if (args[0] === "publish") await runPublish();
 else if (args[0] === "probe") {
   const r = await fetchRelease(args[1]!);
   console.log(JSON.stringify({ ...r, bodyHtml: undefined, blocks: htmlToBlocks(r.bodyHtml) }, null, 1));
-} else throw new Error("Usage: npm run pib -- fetch|publish|probe …");
+} else throw new Error("Usage: npm run pib -- fetch|publish|daily|probe …");

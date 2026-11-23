@@ -306,3 +306,22 @@ June 2026, and Ministry of Ayush releases from July to November 2026.
   newsroom.
 - The prepared files hold PIB's text and are not committed
   (`scripts/pib/*.json` is ignored).
+
+## Daily content run, 23 November 2026
+
+The publisher asked for new content every day. See `docs/DAILY-RUN.md`.
+
+- **PIB releases publish automatically** each evening through
+  `npm run pib -- daily`, with the risk screen overridden as a standing
+  publisher decision. Nobody reads a release before it goes live; the filters
+  in the importer are the only check.
+- **Original briefs are drafted, not published.** Two or three a day are saved
+  as private drafts for the managing editor. Publishing AI-drafted health
+  reporting unread was offered and declined.
+- **It runs from the publisher's Mac** as a scheduled Claude task, because PIB
+  cannot be reached from the cloud workspace. If the Mac is off, the day is
+  missed and the next run catches up. Moving the PIB half to a server cron is
+  open work.
+- The first daily run also published four early-November Health Ministry
+  releases that the 20 November batch had left out because our own briefs
+  cover them. They now exist in both forms.
