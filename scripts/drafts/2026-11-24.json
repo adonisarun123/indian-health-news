@@ -1,0 +1,54 @@
+[
+  {
+    "type": "original_brief",
+    "slug": "sampada-anaemia-state-gaps-iron-b12",
+    "sectionSlug": "public-health",
+    "headline": "Anaemia in women ranges from 29% in Kerala to 81% in Andaman and Nicobar, ICMR survey tables show",
+    "standfirst": "The SAMPADA fact sheets carry state-wise and nutrient figures that the health ministry's 23 November release left out. Iron deficiency was found in about a third of women aged 15 to 49.",
+    "body": [
+      { "type": "paragraph", "text": "More than half of Indian women of reproductive age are anaemic, but iron deficiency was found in only about a third of them, according to fact sheets from the SAMPADA national survey published by the ICMR-National Institute of Nutrition. The Union health ministry announced the headline findings on 23 November. The fact sheets add the state-wise and nutrient tables." },
+      { "type": "paragraph", "text": "The survey, carried out in 2023-25, covered more than 2 lakh people in over 81,000 households across 183 districts in 35 states and union territories. Haemoglobin was measured in venous blood on automated analysers, not with the point-of-care devices used in earlier national surveys." },
+      { "type": "heading", "text": "Wide gaps between states" },
+      { "type": "paragraph", "text": "Among women aged 15 to 49 who were neither pregnant nor lactating, 55.9 per cent were anaemic. The figure was 29.1 per cent in Kerala and 81.2 per cent in the Andaman and Nicobar Islands, with Ladakh at 77.1 per cent and Assam at 71.9 per cent." },
+      { "type": "paragraph", "text": "Among children aged 12 to 59 months, the national figure was 41.8 per cent. Andhra Pradesh recorded 57.5 per cent, Gujarat 56.5 per cent and Chhattisgarh 55.6 per cent, against 14.5 per cent in Kerala, 14.6 per cent in Uttarakhand and 14.8 per cent in Mizoram. Some state and union territory estimates carry wide margins of error." },
+      { "type": "heading", "text": "Iron is only part of it" },
+      { "type": "paragraph", "text": "Iron deficiency was found in 34.1 per cent of women aged 15 to 49, 36.3 per cent of adolescent girls and 23 per cent of children aged 12 to 59 months, but in 3.4 per cent of men aged 20 to 59. Anaemia together with iron deficiency was found in 27 per cent of adolescent girls and of women of reproductive age, against overall anaemia of 46 and 56 per cent." },
+      { "type": "paragraph", "text": "Vitamin B12 deficiency was more common than iron deficiency in every group surveyed: 66.1 per cent of adolescent boys, 65.4 per cent of adolescent girls and 60.4 per cent of adult men. The fact sheets say it was about as common in people without anaemia as in those with it, and the ministry's release says B12 and folate make a limited contribution to anaemia." },
+      { "type": "paragraph", "text": "Severe anaemia was below 2 per cent in most groups. It was 2.9 per cent among women aged 15 to 49. The release says people with moderate or severe anaemia should be tested and tracked until it resolves, under the Anaemia Mukt Bharat programme." },
+      { "type": "paragraph", "text": "Both documents describe the figures as lower than in earlier national surveys. Neither names those surveys or gives their numbers." }
+    ],
+    "citations": [
+      { "url": "https://www.icmr.gov.in/icmrobject/uploads/Reports/1795441356_sampadaanaemiafinalpdf20_11_26.pdf", "label": "Fact sheets: Anaemia and Micronutrient Deficiencies Across the Life Course in India, SAMPADA National Survey (2023-2025)", "publisherName": "Indian Council of Medical Research", "isPrimary": true },
+      { "url": "https://www.pib.gov.in/PressReleasePage.aspx?PRID=2340476", "label": "ICMR's SAMPADA survey shows lower prevalence of anaemia compared to previous national surveys (23 November 2026)", "publisherName": "Press Information Bureau" }
+    ],
+    "contribution": "dataset_analysis",
+    "contributionNote": "Draws state-wise anaemia figures and iron, B12 and folate deficiency rates from the fact-sheet tables, which the ministry's release does not give. Figures were read from a text extraction of the PDF; check them against the tables before publishing.",
+    "assistModel": "claude-fable-5-2"
+  },
+  {
+    "type": "original_brief",
+    "slug": "knee-implant-price-caps-extended-january-2027",
+    "sectionSlug": "medicines-devices",
+    "headline": "Knee implant price caps extended by two months, to 15 January 2027",
+    "standfirst": "The previous order, issued in November 2025, ran to 15 November 2026. Separately, the pricing authority's list of revised anti-cancer medicine prices now runs to 1,566 entries.",
+    "body": [
+      { "type": "paragraph", "text": "The National Pharmaceutical Pricing Authority (NPPA) has extended the ceiling prices of orthopaedic knee implants by two months, up to 15 January 2027. The order, S.O. 6222(E), is dated 13 November and is listed on the authority's website under 14 November. The ceilings were due to lapse on 15 November." },
+      { "type": "paragraph", "text": "The previous extension, S.O. 5190(E) of 14 November 2025, kept the ceilings in force up to 15 November 2026. The new order prolongs that notification by two months. It does not restate the prices and does not say what will apply after 15 January." },
+      { "type": "paragraph", "text": "The ceilings were first notified in S.O. 2668(E) of 16 August 2017. The conditions attached to that notification, set out in its notes (b) to (t), remain in force for as long as the new order runs." },
+      { "type": "heading", "text": "Anti-cancer price list updated" },
+      { "type": "paragraph", "text": "On 18 November NPPA also published an updated company-wise table of old and revised maximum retail prices for non-scheduled anti-cancer medicines, based on what companies had reported up to that date. The revised prices took effect on 9 November." },
+      { "type": "paragraph", "text": "Entries in the table are numbered up to 1,566. When the prices took effect, the Department of Pharmaceuticals counted 1,364 formulations from 85 companies, as on 8 November." },
+      { "type": "paragraph", "text": "The table gives the company, drug and strength, brand, pack size and both prices. One entry shows a bottle of 30 abiraterone acetate 250 mg tablets, sold as Abirawin 250, going from ₹11,601 to ₹2,307. Not every entry is a cut: some show the same old and revised price, among them Ramiven 100 mg (abemaciclib) at ₹21,429. The table gives no totals for companies or savings." },
+      { "type": "paragraph", "text": "The department has said buyers can check the revised price on the pack, on the Pharma Sahi Daam mobile app or at nppa.gov.in. Complaints about overcharging can be made on the Pharma Jan Samadhan portal or to the NPPA helpline, 1800-111-255." }
+    ],
+    "citations": [
+      { "url": "https://nppa.gov.in/storage/uploads/tender/277903-14-11-2026.pdf", "label": "Notification for Ceiling Prices of Orthopaedic Knee Implants for Knee Replacement System, S.O. 6222(E) (13 November 2026)", "publisherName": "National Pharmaceutical Pricing Authority", "isPrimary": true },
+      { "url": "https://nppa.gov.in/storage/uploads/tender/revised-mrp-information-18-11-2026.pdf", "label": "Revised MRP of Non-Scheduled Anti-Cancer Drugs, effective from 09/11/2026 (data received till 18 November 2026)", "publisherName": "National Pharmaceutical Pricing Authority" },
+      { "url": "https://nppa.gov.in/en/view_more", "label": "Circulars and orders listing", "publisherName": "National Pharmaceutical Pricing Authority" },
+      { "url": "https://www.pib.gov.in/PressReleasePage.aspx?PRID=2334268", "label": "Revised MRPs of 1,364 Anti-Cancer Formulations Come into Effect from Today (9 November 2026)", "publisherName": "Press Information Bureau" }
+    ],
+    "contribution": "prior_notice_comparison",
+    "contributionNote": "Compares the two-month knee implant extension with the previous order, which ran to 15 November 2026, and the 18 November anti-cancer list (numbered to 1,566) with the 1,364 formulations counted on 8 November. The 1,566 is the last serial number in the PDF, not an official count; check before publishing.",
+    "assistModel": "claude-fable-5-2"
+  }
+]
