@@ -11,14 +11,32 @@ On the Mac, in this folder:
 
     npm run pib -- daily --as adonis.arun@gmail.com --override-risk
 
-Publishes every Health and Family Welfare and Ayush release issued this month
-that is not on the site yet. Releases the risk screen holds are reclassified as
+Publishes every Health and Family Welfare, Ayush and Department of
+Pharmaceuticals release issued this month that is not on the site yet (PIB
+ministry codes 31, 80 and 41; from code 41 only releases issued by the
+Department of Pharmaceuticals are taken, not Fertilizers or Chemicals and
+Petrochemicals). Releases the risk screen holds are reclassified as
 routine and published without medical review: a standing publisher decision,
 recorded in the audit trail each time. Housekeeping items and previews are left
-out by the rules in `scripts/pib-import.ts`. Read the tally lines; `failed`
+out by the rules in `scripts/pib-import.ts`. Read the three tally lines; `failed`
 must be 0.
 
 ## 2. Original briefs: drafted, never published by the run
+
+First list the day's CDSCO and FSSAI leads:
+
+    npm run -s sources
+
+It writes `scripts/sources/YYYY-MM-DD.json` with notices not seen before.
+CDSCO and FSSAI are **leads for briefs only**: CDSCO's copyright policy forbids
+reproduction without permission and FSSAI's pages contradict each other, so
+never copy their text onto the site. Open the notice, write in our own words,
+cite it, and save it as a draft like any other brief. Most CDSCO notices are
+routine licensing paperwork; pick only items that matter to patients,
+prescribers or the industry (drug alerts, bans, recalls, price or quality
+rules, misleading-claim notices). FSSAI's site rarely updates its lists; an
+empty FSSAI result is normal. A `failed` entry in the tally means the site
+changed or was down: report it.
 
 Two or three briefs a day, saved as private drafts for the managing editor to
 read and publish in the newsroom (`/newsroom`).

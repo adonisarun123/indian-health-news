@@ -325,3 +325,26 @@ The publisher asked for new content every day. See `docs/DAILY-RUN.md`.
 - The first daily run also published four early-November Health Ministry
   releases that the 20 November batch had left out because our own briefs
   cover them. They now exist in both forms.
+
+
+## Pharmaceuticals releases, and CDSCO and FSSAI as brief sources (25 November 2026)
+
+The publisher asked for news from sites beyond PIB. Commercial news sites were ruled
+out: copying their articles, whole or reworded, would infringe their copyright and
+risks a search penalty for scraped content across the domain.
+
+- **Department of Pharmaceuticals (PIB code 41)** is added to the verbatim PIB importer
+  and the daily command, on the same terms as Health and Ayush (PIB's copyright policy
+  allows reproduction with credit; canonical points to PIB; standing risk-screen
+  override). Only releases whose PIB ministry line names the Department of
+  Pharmaceuticals are taken. The five November releases were published on 25 November.
+- **CDSCO and FSSAI are leads, not republished.** CDSCO's copyright policy says its
+  content may not be reproduced without permission. FSSAI's Website Policies page allows
+  reproduction with credit but its Disclaimer page asks for permission by email. So
+  `npm run sources` (`scripts/sources-watch.ts`) only lists new notices; the daily run
+  writes original briefs from them, saved as drafts for the managing editor. Nothing
+  from either site is published automatically or copied. Clinical items (drug alerts,
+  bans) must go through medical review like any brief.
+- FSSAI's site is a single-page app; its notice lists live in its script bundle and were
+  last updated in July/August 2026 when checked, so FSSAI will rarely yield anything.
+- Word-for-word republication from CDSCO or FSSAI would need their written permission.

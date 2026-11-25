@@ -5,11 +5,11 @@
  *   npm run pib -- fetch --ministry 31 --months 2026-01..2026-06 --out scripts/pib/health-2026-h1.json
  *   npm run pib -- fetch --ministry 31 --months 2026-11 --after-prid 2338316 --out scripts/pib/health-new.json
  *   npm run pib -- fetch --ministry 31 --prids 2237403,2237404 --out scripts/pib/extra.json
- *   npm run pib -- daily --as you@example.com --override-risk     (everything new this month, both ministries)
+ *   npm run pib -- daily --as you@example.com --override-risk     (everything new this month, every ministry we carry)
  *   npm run pib -- publish scripts/pib/health-new.json --as you@example.com [--override-risk]
  *
  * `fetch` reads PIB's English listing for one ministry (31 Health and Family Welfare,
- * 80 Ayush), downloads each release, converts it to our blocks and writes a file an
+ * 80 Ayush, 41 Chemicals and Fertilizers, Department of Pharmaceuticals releases only), downloads each release, converts it to our blocks and writes a file an
  * editor can read before anything is published. Releases already on the site are left out.
  *
  * `publish` puts each prepared release through the same commands the newsroom uses:
@@ -36,7 +36,8 @@ const LEAVE_OUT = /special campaign|swachh|\bpledge\b|vigilance awareness|rashtr
 /** Announcements of an event that its own release covers afterwards. */
 const PREVIEW = /\b(set to (become|launch)|to (launch|release|inaugurate|preside|convene|observe|host|begin|organi[sz]e|unveil|be celebrated|be observed)\b)/i;
 const leftOut = (title: string) => LEAVE_OUT.test(title) || (PREVIEW.test(title) && !/^(steps|measures) taken\b/i.test(title) && !/\b(launches|launched|inaugurates|inaugurated|releases|released|concludes|held)\b/i.test(title));
-const ISSUERS: Record<string, string> = { "31": "Ministry of Health and Family Welfare", "80": "Ministry of Ayush" };
+const ISSUERS: Record<string, string> = { "31": "Ministry of Health and Family Welfare", "80": "Ministry of Ayush", "41": "Department of Pharmaceuticals" };
+/** Ministry 41 is Chemicals and Fertilizers; only releases its Department of Pharmaceuticals issues are carried. */
 
 /* ───────────── text ───────────── */
 
@@ -282,7 +283,7 @@ async function runFetch() {
   const out = opt("--out");
   const after = Number(opt("--after-prid") ?? 0);
   const prids = opt("--prids")?.split(",").map((p) => p.trim()).filter((p) => /^\d+$/.test(p));
-  if (!ministry || !(months || prids?.length) || !out || !ISSUERS[ministry]) throw new Error("Usage: fetch --ministry <31|80> (--months YYYY-MM[..YYYY-MM] | --prids N,N) --out <file.json> [--after-prid N] [--with-subheads]");
+  if (!ministry || !(months || prids?.length) || !out || !ISSUERS[ministry]) throw new Error("Usage: fetch --ministry <31|80|41> (--months YYYY-MM[..YYYY-MM] | --prids N,N) --out <file.json> [--after-prid N] [--with-subheads]");
   const [from, to = from] = (months ?? "0-0").split("..");
   const [fy, fm] = from!.split("-").map(Number) as [number, number];
   const [ty, tm] = to!.split("-").map(Number) as [number, number];
@@ -306,7 +307,7 @@ async function runFetch() {
       const r = await fetchRelease(prid);
       await sleep(900);
       const wanted = ISSUERS[ministry]!;
-      if (!(r.ministry === wanted || (ministry === "80" && /ayush/i.test(r.ministry)))) { skip(`issued by ${r.ministry || "an unnamed body"}`, r.title); continue; }
+      if (!(r.ministry === wanted || (ministry === "80" && /ayush/i.test(r.ministry)) || (ministry === "41" && /department of pharmaceuticals/i.test(r.ministry)))) { skip(`issued by ${r.ministry || "an unnamed body"}`, r.title); continue; }
       if (leftOut(r.title)) { skip("housekeeping or preview", r.title); continue; }
       const key = `${r.issuedAt.slice(0, 10)} ${r.title.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim()}`;
       if (titles.has(key)) { skip("same title issued the same day", r.title); continue; }
