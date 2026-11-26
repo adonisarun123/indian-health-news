@@ -23,7 +23,9 @@
     "drafts": "tsx --env-file-if-exists=.env.local scripts/load-drafts.ts",
     "publish-drafts": "tsx --env-file-if-exists=.env.local scripts/publish-drafts.ts",
     "pib": "tsx --env-file-if-exists=.env.local scripts/pib-import.ts",
-    "sources": "tsx scripts/sources-watch.ts"
+    "sources": "tsx scripts/sources-watch.ts",
+    "scrape": "tsx --disable-warning=ExperimentalWarning --env-file-if-exists=.env.local scraper/main.ts",
+    "test:scraper": "vitest run --config scraper/vitest.config.ts"
   },
   "dependencies": {
     "drizzle-orm": "^0.45.4",

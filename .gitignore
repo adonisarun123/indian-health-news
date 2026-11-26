@@ -10,3 +10,5 @@ coverage/
 indian-health-news/
 scripts/pib/*.json
 scripts/sources/*.json
+scraper/data/
+scraper/out/
