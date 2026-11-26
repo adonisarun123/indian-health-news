@@ -386,3 +386,10 @@ published and for the PIB coverage to be verified.
   the daily run still saves briefs as drafts only. `npm run publish-drafts`
   (`scripts/publish-drafts.ts`) publishes drafts by slug through the newsroom
   commands; with `--override-risk` it needs a `--reason`.
+- **Backfill result, 26 November.** Health Ministry January to October: 596
+  releases listed across all offices, 223 new published (136 needed the standing
+  risk-screen override), 0 failed. Ayush July to October: 12 new published.
+  November: 13 Health and 1 Ayush. Two of the Health releases were in Punjabi
+  and Odia; the English check only looked for Devanagari. Both were removed (410)
+  with a reason in the audit trail, and the check now covers every Indian script
+  (U+0900 to U+0DFF) and Urdu.

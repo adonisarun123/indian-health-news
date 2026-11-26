@@ -358,7 +358,8 @@ async function runFetch() {
       const chars = body.reduce((n, b) => n + (b.type === "list" ? b.items.join(" ").length : b.text.length), 0);
       if (chars < 400) { skip(`too little text (${chars} characters; likely photos or a table image)`, r.title); continue; }
       if (body.length > 400) { skip(`too long (${body.length} blocks)`, r.title); continue; }
-      if (/[ऀ-ॿ]{20,}/.test(body.map((b) => (b.type === "list" ? b.items.join(" ") : b.text)).join(" ").slice(0, 1500))) { skip("not in English", r.title); continue; }
+      // Any Indian script (Devanagari through Sinhala, U+0900–U+0DFF) or Urdu/Arabic: regional offices issue in local languages too.
+      if (/[ऀ-෿؀-ۿ]{2,}(\s+[ऀ-෿؀-ۿ]{2,}){4,}/.test(`${r.title} ${body.map((b) => (b.type === "list" ? b.items.join(" ") : b.text)).join(" ").slice(0, 1500)}`)) { skip("not in English", r.title); continue; }
       titles.add(key);
       const headline = r.title.length <= 200 ? r.title : `${r.title.slice(0, 199).replace(/\s+\S*$/, "")}…`;
       const dateLong = `${r.day} ${LONG[r.month]} ${r.year}`;
