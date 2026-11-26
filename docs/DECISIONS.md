@@ -393,3 +393,12 @@ published and for the PIB coverage to be verified.
   and Odia; the English check only looked for Devanagari. Both were removed (410)
   with a reason in the audit trail, and the check now covers every Indian script
   (U+0900 to U+0DFF) and Urdu.
+- **Daily briefs now publish without review (26 November 2026).** The publisher
+  instructed that the daily run push its commit to `main` each day and publish
+  its original briefs without his review, and, asked specifically about briefs
+  the risk screen holds, chose to reclassify and publish those too. No medical
+  review takes place; the run's claim-by-claim check against cited sources is
+  the only check, and the reason is recorded in the audit trail each time.
+  Briefs with medical advice or treatment claims beyond the source stay drafts.
+  First briefs published this way: PM-ABHIM approvals (routine) and State drug
+  regulators / SHRESTH (held as clinical, overridden).
