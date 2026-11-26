@@ -1,0 +1,66 @@
+[
+  {
+    "type": "original_brief",
+    "slug": "pm-abhim-approvals-19983-against-targets",
+    "sectionSlug": "healthcare-delivery",
+    "headline": "Health infrastructure mission has approved 19,983 units, about six in ten of those planned",
+    "standfirst": "Approvals for sub-health centre buildings have risen by 1,482 since March, but urban centres and block units are unchanged since July 2025, a comparison of official figures shows.",
+    "body": [
+      { "type": "paragraph", "text": "The Pradhan Mantri Ayushman Bharat Health Infrastructure Mission (PM-ABHIM) has approved 19,983 infrastructure units, Union Health Secretary Punya Salila Srivastava told a workshop of States and Union Territories in Bengaluru on 26 November. She asked States to make sure that approved units become working facilities with equipment and staff." },
+      { "type": "paragraph", "text": "The mission was launched on 25 October 2021 with an outlay of ₹64,180 crore. Earlier replies in Parliament gave its period as 2021-22 to 2025-26 and set out how many units of each kind it was meant to support. Set against those numbers, the approvals announced this week cover about 60 per cent of the 33,526 units planned in the five categories." },
+      { "type": "heading", "text": "Approved against planned" },
+      { "type": "list", "ordered": false, "items": [
+        "Sub-health centres without a building: 11,001 approved of 17,788 planned, about 62 per cent.",
+        "Urban Ayushman Arogya Mandirs: 5,456 of 11,024, just under half.",
+        "Block Public Health Units: 2,151 of 3,382, about 64 per cent.",
+        "District Integrated Public Health Laboratories: 744, against 730 planned.",
+        "Critical Care Blocks: 631, against 602 planned."
+      ] },
+      { "type": "heading", "text": "What has changed" },
+      { "type": "paragraph", "text": "In a written reply in the Lok Sabha on 13 March 2026, the ministry counted 9,519 approved sub-health centre buildings and 621 Critical Care Blocks. The new figures are higher by 1,482 and 10. A Rajya Sabha reply on 22 July 2025 had put the sub-health centre figure at 10,609, so the count fell before it rose again." },
+      { "type": "paragraph", "text": "The numbers for urban centres, block units and district laboratories are the same in all three statements: no further approvals have been reported in these categories for 16 months." },
+      { "type": "paragraph", "text": "All of these are approvals. The latest release does not say how many units have been built or are in use. In March the ministry told the Lok Sabha that States had faced delays in finding land, slow tendering and procurement, and incomplete project reports." },
+      { "type": "paragraph", "text": "The release also counts 48 Virus Research and Diagnostic Laboratories supported under the mission and metropolitan surveillance units in 20 cities. The Health Secretary invited States to send proposals for further infrastructure and capital investment for the Union government to consider." }
+    ],
+    "citations": [
+      { "url": "https://www.pib.gov.in/PressReleasePage.aspx?PRID=2341965", "label": "Union Health Secretary addresses National Level Orientation Workshop on NHM and PM-ABHIM, Bengaluru (26 November 2026)", "publisherName": "Press Information Bureau", "isPrimary": true },
+      { "url": "https://www.pib.gov.in/PressReleasePage.aspx?PRID=2239631", "label": "Update on PM-ABHIM: written reply in the Lok Sabha (13 March 2026)", "publisherName": "Press Information Bureau" },
+      { "url": "https://www.pib.gov.in/PressReleasePage.aspx?PRID=2146799", "label": "Update on PM-ABHIM: written reply in the Rajya Sabha (22 July 2025)", "publisherName": "Press Information Bureau" }
+    ],
+    "contribution": "prior_notice_comparison",
+    "contributionNote": "Sets the approvals announced on 26 November against the mission's planned numbers and against the counts given to Parliament in July 2025 and March 2026.",
+    "assistModel": "claude-fable-5-2"
+  },
+  {
+    "type": "original_brief",
+    "slug": "state-drug-regulators-who-style-assessment-shresth-feedback",
+    "sectionSlug": "policy",
+    "headline": "Centre proposes WHO-style assessment of State drug regulators, seeks feedback on index launched in 2025",
+    "standfirst": "Fifteen months after the SHRESTH index was launched with monthly scoring, no State scores appear in the health ministry's statements, and States are being asked to review the tool.",
+    "body": [
+      { "type": "paragraph", "text": "The Union health ministry has proposed a framework to assess how well each State's drug regulator works, modelled on the maturity levels the World Health Organization (WHO) uses for national regulators. Union Health Secretary Punya Salila Srivastava described the proposal at a national conference on food safety and drug administration in Bengaluru on 26 November." },
+      { "type": "paragraph", "text": "She also asked States to review the State Health Regulatory Excellence Index, known as SHRESTH, and to send feedback to strengthen it." },
+      { "type": "heading", "text": "What was announced in 2025" },
+      { "type": "paragraph", "text": "The ministry launched SHRESTH on 12 August 2025 as a tool for States to measure gaps in their own drug regulation. The Drugs Controller General of India said then that manufacturing States would be ranked on 27 measures and States that mainly distribute medicines on 23. The measures fall under five themes: human resources, infrastructure, licensing, surveillance and responsiveness." },
+      { "type": "paragraph", "text": "States were to send data to the Central Drugs Standard Control Organisation by the 25th of each month, with scores shared on the 1st of the next. Neither the launch statement nor this week's release gives a score or rank for any State." },
+      { "type": "paragraph", "text": "At the launch, the Health Secretary noted that India had reached WHO maturity level 3 for vaccines and said the next step was to bring medicines to the same standard." },
+      { "type": "heading", "text": "What States are being asked to do" },
+      { "type": "list", "ordered": false, "items": [
+        "Review SHRESTH and share feedback.",
+        "Contribute practical experience to the design of the planned Digital Drug Regulatory System.",
+        "Strengthen inspections and make greater use of technology.",
+        "Improve transparency and accountability in clinical trials, including at contract research organisations.",
+        "Give feedback on the risk-based inspection system of the Food Safety and Standards Authority of India."
+      ] },
+      { "type": "paragraph", "text": "On food, the Health Secretary said that because food safety licences are now valid permanently, regulators carry a greater duty to monitor businesses through risk-based inspections." },
+      { "type": "paragraph", "text": "The release gives no date for the new assessment framework or for the digital system. Sessions at the conference covered spurious and adulterated medicines, coordination between States on investigations, and more uniform licensing." }
+    ],
+    "citations": [
+      { "url": "https://www.pib.gov.in/PressReleasePage.aspx?PRID=2342029", "label": "Union Health Secretary Calls for Strengthening State-Level Regulatory Capacity to Ensure Safer Food and Quality Medicines (26 November 2026)", "publisherName": "Press Information Bureau", "isPrimary": true },
+      { "url": "https://www.pib.gov.in/PressReleasePage.aspx?PRID=2155722", "label": "Union Health Ministry Launches SHRESTH (12 August 2025)", "publisherName": "Press Information Bureau" }
+    ],
+    "contribution": "prior_notice_comparison",
+    "contributionNote": "Compares the 26 November proposals with what the ministry announced when it launched SHRESTH on 12 August 2025, including the monthly scoring that was promised.",
+    "assistModel": "claude-fable-5-2"
+  }
+]
