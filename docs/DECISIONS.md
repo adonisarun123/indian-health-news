@@ -348,3 +348,41 @@ risks a search penalty for scraped content across the domain.
 - FSSAI's site is a single-page app; its notice lists live in its script bundle and were
   last updated in July/August 2026 when checked, so FSSAI will rarely yield anything.
 - Word-for-word republication from CDSCO or FSSAI would need their written permission.
+
+## Every PIB office, and the waiting briefs published (26 November 2026)
+
+The publisher saw no new stories for three days and asked for everything to be
+published and for the PIB coverage to be verified.
+
+- **Coverage gap found and fixed.** The importer read only the PIB Delhi listing
+  (`reg=3`). Releases a ministry issues through a regional PIB office (AIIMS
+  Nagpur, Bhubaneswar, Raipur, Guwahati, Jodhpur; FSSAI regional programmes)
+  appear only on that office's listing. November alone had 13 such Health
+  Ministry releases missing. `scripts/pib-import.ts` now reads all 29 office
+  listings and de-duplicates by PRID, and by issue date plus title against what
+  is already on the site (an office sometimes reissues a Delhi release under a
+  new PRID). Earlier months were backfilled the same day (Health January to
+  October, Ayush July to October), on the standing PIB terms.
+- **Checks that passed.** Within one office the month listing has no paging:
+  for Health (November, January, October), Ayush and Pharmaceuticals (November)
+  the union of the 26 day-by-day listings equalled the month listing. PIB's
+  older ministry page (`newsite/pmreleases.aspx?mincode=31`, 24 September to
+  9 October) listed 20 Health releases; the 15 not left out by rule were all on
+  the site. So months with few releases (January 17, April 15 from Delhi) are
+  what PIB issued, not a scraping gap.
+- **Silent skips made loud.** A release fetched minutes after PIB posts it can
+  come back half-built ("unexpected page layout"; seen with PRID 2341877 on
+  26 November). It is now retried once after 20 seconds; if it still fails the
+  run prints `FAILED read` and a `fetchProblems` count instead of a quiet skip.
+  It is not on the site, so the next run picks it up.
+- **Five waiting briefs published on the publisher's instruction.** The drafts
+  of 19, 24 and 25 November (knee implant ceilings, SAMPADA anaemia, Sanofi
+  import cancellation, North-East pit viper antivenom, cancer medicine prices)
+  were routed to clinical or sensitive review, and the site has no credentialed
+  medical reviewer. Before publishing, every figure and claim in each was
+  checked against its cited sources (the CDSCO order is a scanned image and was
+  read by OCR). The managing editor then reclassified them as routine with that
+  reason in the audit trail, and published them. This was a one-off instruction:
+  the daily run still saves briefs as drafts only. `npm run publish-drafts`
+  (`scripts/publish-drafts.ts`) publishes drafts by slug through the newsroom
+  commands; with `--override-risk` it needs a `--reason`.

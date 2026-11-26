@@ -21,6 +21,20 @@ recorded in the audit trail each time. Housekeeping items and previews are left
 out by the rules in `scripts/pib-import.ts`. Read the three tally lines; `failed`
 must be 0.
 
+The importer reads the listing of **every PIB office** (Delhi and all 28
+regional offices), not only PIB Delhi: releases issued through a regional
+office (AIIMS events, FSSAI regional programmes) appear only there. A release
+reissued by another office under a new PRID is matched on issue date and title
+and left out. Because of the 29 listings per ministry the run takes roughly
+5 to 10 minutes.
+
+Each ministry also prints a line like
+`{"fetchProblems":{"unreadable":0,"listingFailures":0}}`. Both must be 0. A
+release fetched minutes after PIB posts it is retried once after 20 seconds; if
+it still cannot be read it is reported as `FAILED read` and picked up by the
+next run, since it is not on the site yet. A `FAILED listing` line means an
+office's listing did not load: report it.
+
 ## 2. Original briefs: drafted, never published by the run
 
 First list the day's CDSCO and FSSAI leads:

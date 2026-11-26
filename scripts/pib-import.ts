@@ -27,7 +27,14 @@ import { articles, people } from "../src/db/schema";
 import { type Block, CommandError, createArticle, loadActor, performAction, slugify } from "../src/core/articles";
 
 const UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36";
-const LISTING = "https://www.pib.gov.in/allRel.aspx?reg=3&lang=1";
+const listingUrl = (region: string) => `https://www.pib.gov.in/allRel.aspx?reg=${region}&lang=1`;
+/**
+ * Every PIB office. A ministry's releases are split across them: PIB Delhi (3) carries most,
+ * but releases issued through a regional office (an AIIMS event, an FSSAI regional programme)
+ * appear only on that office's listing. Checked 26 November 2026: Delhi alone missed several
+ * Health Ministry releases. PRIDs repeat across offices and are de-duplicated.
+ */
+const REGIONS = ["3", "1", "5", "6", "17", "19", "20", "21", "22", "23", "24", "30", "31", "32", "33", "34", "35", "36", "37", "38", "39", "40", "41", "42", "43", "44", "45", "46", "48"];
 const canonicalOf = (prid: string) => `https://pib.gov.in/PressReleasePage.aspx?PRID=${prid}`;
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -193,11 +200,12 @@ const hidden = (html: string) => {
 };
 
 /** PRIDs and titles for one ministry and month, from the English listing. */
-async function listMonth(ministry: string, year: number, month: number): Promise<{ prid: string; title: string }[]> {
+async function listMonth(ministry: string, year: number, month: number, region = "3"): Promise<{ prid: string; title: string }[]> {
+  const LISTING = listingUrl(region);
   const first = await get(LISTING);
   const cookie = (first.headers.getSetCookie?.() ?? []).map((c) => c.split(";")[0]).join("; ");
   const form = hidden(await first.text());
-  form.set("ctl00$Bar1$ddlregion", "3");
+  form.set("ctl00$Bar1$ddlregion", region);
   form.set("ctl00$Bar1$ddlLang", "1");
   form.set("ctl00$ContentPlaceHolder1$ddlMinistry", ministry);
   form.set("ctl00$ContentPlaceHolder1$ddlday", "0");
@@ -209,7 +217,7 @@ async function listMonth(ministry: string, year: number, month: number): Promise
   const html = await res.text();
   const sel = (id: string) => new RegExp(`id="ContentPlaceHolder1_${id}"[\\s\\S]*?<option selected="selected" value="([^"]*)"`).exec(html)?.[1];
   if (sel("ddlMinistry") !== ministry || sel("ddlMonth") !== String(month) || sel("ddlYear") !== String(year) || sel("ddlday") !== "0")
-    throw new Error(`PIB listing did not apply the filter for ${ministry} ${year}-${month} (got ${sel("ddlMinistry")}, ${sel("ddlday")}, ${sel("ddlMonth")}, ${sel("ddlYear")}).`);
+    throw new Error(`PIB listing (office ${region}) did not apply the filter for ${ministry} ${year}-${month} (got ${sel("ddlMinistry")}, ${sel("ddlday")}, ${sel("ddlMonth")}, ${sel("ddlYear")}).`);
   const area = html.slice(html.indexOf('class="content-area"'));
   const seen = new Map<string, string>();
   for (const m of area.matchAll(/<a[^>]*href=['"][^'"]*PRID=(\d+)[^'"]*['"][^>]*>([\s\S]*?)<\/a>/gi)) if (!seen.has(m[1]!)) seen.set(m[1]!, strip(m[2]!));
@@ -277,6 +285,21 @@ async function existing(): Promise<Map<string, string>> {
   }
 }
 
+/** Issue date and headline of every PIB release already on the site, keyed as runFetch keys titles. */
+async function existingTitles(): Promise<Set<string>> {
+  const { pool } = createDb((process.env.DATABASE_URL_DIRECT ?? process.env.DATABASE_URL)!, 1);
+  try {
+    const { rows } = await pool.query<{ d: string; h: string }>(
+      `select to_char(a.source_issued_at at time zone 'Asia/Kolkata', 'YYYY-MM-DD') d, v.headline h
+         from articles a join article_versions v on v.id = coalesce(a.public_version_id, a.draft_version_id)
+        where a.type = 'press_material' and a.source_issued_at is not null`,
+    );
+    return new Set(rows.map((r) => `${r.d} ${r.h.replace(/…$/, "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim()}`));
+  } finally {
+    await pool.end();
+  }
+}
+
 async function runFetch() {
   const ministry = opt("--ministry");
   const months = opt("--months");
@@ -289,14 +312,31 @@ async function runFetch() {
   const [ty, tm] = to!.split("-").map(Number) as [number, number];
   const have = await existing();
   const listed: { prid: string; title: string }[] = (prids ?? []).map((prid) => ({ prid, title: "" }));
+  const listingFailures: string[] = [];
+  let unreadable = 0;
   for (let y = fy, m = fm; !prids && (y < ty || (y === ty && m <= tm)); m === 12 ? (y++, (m = 1)) : m++) {
-    const rows = await listMonth(ministry, y, m);
-    console.log(`listing ${y}-${String(m).padStart(2, "0")}: ${rows.length}`);
-    listed.push(...rows);
-    await sleep(1200);
+    const ym = `${y}-${String(m).padStart(2, "0")}`;
+    const before = new Set(listed.map((l) => l.prid));
+    const perOffice: string[] = [];
+    for (const region of REGIONS) {
+      try {
+        const rows = await listMonth(ministry, y, m, region);
+        const fresh = rows.filter((r) => !before.has(r.prid));
+        for (const r of fresh) before.add(r.prid);
+        listed.push(...fresh);
+        if (rows.length) perOffice.push(`${region}:${rows.length}${region === "3" ? "" : `(+${fresh.length})`}`);
+      } catch (e) {
+        listingFailures.push(`${ym} office ${region}: ${(e as Error).message}`);
+        console.log(`FAILED listing ${ym} office ${region}: ${(e as Error).message}`);
+      }
+      await sleep(700);
+    }
+    console.log(`listing ${ym}: ${before.size} across all PIB offices [${perOffice.join(" ")}]`);
   }
   const items: Prepared[] = [];
   const skipped: { prid: string; title: string; reason: string }[] = [];
+  // A regional office sometimes reissues a Delhi release under a new PRID: match on day and title too.
+  const onSite = prids ? new Set<string>() : await existingTitles();
   const titles = new Set<string>();
   for (const { prid, title: listTitle } of [...new Map(listed.map((l) => [l.prid, l])).values()].sort((a, b) => Number(a.prid) - Number(b.prid))) {
     const skip = (reason: string, title = listTitle) => { skipped.push({ prid, title, reason }); console.log(`skip  ${prid} ${reason}: ${title.slice(0, 80)}`); };
@@ -304,13 +344,15 @@ async function runFetch() {
     if (have.has(canonicalOf(prid))) { skip("already on the site"); continue; }
     if (leftOut(listTitle)) { skip("housekeeping or preview"); continue; }
     try {
-      const r = await fetchRelease(prid);
+      // A release fetched minutes after PIB posts it can come back half-built; wait and try once more.
+      const r = await fetchRelease(prid).catch(async () => { await sleep(20_000); return fetchRelease(prid); });
       await sleep(900);
       const wanted = ISSUERS[ministry]!;
       if (!(r.ministry === wanted || (ministry === "80" && /ayush/i.test(r.ministry)) || (ministry === "41" && /department of pharmaceuticals/i.test(r.ministry)))) { skip(`issued by ${r.ministry || "an unnamed body"}`, r.title); continue; }
       if (leftOut(r.title)) { skip("housekeeping or preview", r.title); continue; }
       const key = `${r.issuedAt.slice(0, 10)} ${r.title.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim()}`;
       if (titles.has(key)) { skip("same title issued the same day", r.title); continue; }
+      if (onSite.has(key) || [...onSite].some((k) => k.length > 40 && key.startsWith(k))) { skip("same release already on the site under another PRID", r.title); continue; }
       let body = htmlToBlocks(r.bodyHtml);
       if (args.includes("--with-subheads") && r.subtitles.length) body = [{ type: "list", ordered: false, items: r.subtitles.map((s) => s.slice(0, 1000)).slice(0, 50) }, ...body];
       const chars = body.reduce((n, b) => n + (b.type === "list" ? b.items.join(" ").length : b.text.length), 0);
@@ -341,12 +383,17 @@ async function runFetch() {
       });
       console.log(`ok    ${prid} ${body.length} blocks: ${headline.slice(0, 80)}`);
     } catch (e) {
-      skip(`could not be read (${(e as Error).message})`);
+      unreadable++;
+      console.log(`FAILED read ${prid} (${(e as Error).message}): ${listTitle.slice(0, 80)} — not on the site; the next run tries again`);
+      skipped.push({ prid, title: listTitle, reason: `could not be read (${(e as Error).message})` });
     }
   }
   mkdirSync(dirname(out), { recursive: true });
-  writeFileSync(out, JSON.stringify({ ministry: ISSUERS[ministry], months, preparedAt: new Date().toISOString(), items, skipped }, null, 1));
+  writeFileSync(out, JSON.stringify({ ministry: ISSUERS[ministry], months, preparedAt: new Date().toISOString(), items, skipped, listingFailures, unreadable }, null, 1));
   console.log(`\nprepared ${items.length}, left out ${skipped.length} -> ${out}`);
+  // Reported in the same shape as the publish tally so a run cannot pass these over silently.
+  console.log(JSON.stringify({ fetchProblems: { unreadable, listingFailures: listingFailures.length } }));
+  if (unreadable || listingFailures.length) process.exitCode = 1;
 }
 
 async function runPublish() {
