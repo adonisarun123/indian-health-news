@@ -35,7 +35,8 @@ Zod · Vitest.
 | `src/core/reconcile.ts` | Post-restore reconciliation |
 | `src/core/jobs.ts`, `src/worker/` | Durable queue, worker loop, scheduler tick |
 | `src/app/api/v1/ingest/` | `POST /events`, `GET /events/{event_id}` |
-| `scripts/produce.ts`, `fixtures/` | Fixture producer standing in for the scraper |
+| `scripts/produce.ts`, `fixtures/` | Fixture producer for tests and local checks |
+| `scraper/` | The scraper: feeds and news sitemaps to signed intake events (`npm run scrape`; see `scraper/README.md` and `docs/SCRAPER-HANDOVER.md`) |
 | `tests/` | Acceptance tests AT-01 to AT-06, queue recovery, policy, reader queries, site over HTTP |
 
 ## Run it
