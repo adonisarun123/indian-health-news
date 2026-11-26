@@ -21,7 +21,6 @@
     "test:site": "NODE_ENV=production next build && E2E=1 vitest run tests/site.e2e.test.ts",
     "staff": "tsx --env-file-if-exists=.env.local scripts/staff.ts",
     "drafts": "tsx --env-file-if-exists=.env.local scripts/load-drafts.ts",
-<<<<<<< HEAD
     "publish-drafts": "tsx --env-file-if-exists=.env.local scripts/publish-drafts.ts",
     "pib": "tsx --env-file-if-exists=.env.local scripts/pib-import.ts",
     "sources": "tsx scripts/sources-watch.ts",
