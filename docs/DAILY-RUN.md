@@ -88,7 +88,11 @@ Load them (drafts only; existing slugs are skipped):
 
     npm run drafts -- scripts/drafts/YYYY-MM-DD.json --as adonis.arun@gmail.com
 
-Then commit the drafts file on `main`. Do not push; the publisher pushes.
+Then commit the drafts file on `main` and push it: `git fetch origin && git push origin main`
+(publisher's standing instruction, 26 November 2026: push every day without asking).
+Never force-push. If `main` is behind or has diverged from `origin/main`, or the
+push is refused, leave it and report the exact error. Pushing the file does not
+publish the briefs: they stay private drafts until the managing editor publishes them.
 
 ## 3. Report
 
