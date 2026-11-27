@@ -69,11 +69,28 @@ Needs Node 22.13 or later for `node:sqlite`.
 - Each alert is raised at most once a day per source and kind.
 - Kinds: `robots`, `blocked`, `rate_limited`, `drift` (a 200 response that is not a feed, or has no items), `stale_feed`, `network` (three failures in a row), `off_host`, `invalid_event`, `source_refused`, `url_not_allowed`, `event_parked`, `intake_auth`, `receipt_failed`.
 
+## Platform setup
+
+`npm run scraper-setup` registers the sources and issues the producer key. It writes to the site's database, so it needs `DATABASE_URL` and the same `INGEST_SECRET_KEY` the site runs with. `--as` is a staff account with the managing editor or administrator role.
+
+```bash
+npm run scraper-setup -- sources  --as you@example.com                          # register every enabled source, on trial (under review)
+npm run scraper-setup -- producer --as you@example.com --write-env .env.local   # key "ihn-scraper" for those sources; writes PRODUCER_KEY/SECRET, never prints the secret
+npm run scraper-setup -- assign   --as you@example.com --source new-slug        # after adding a source to sources.json and registering it
+npm run scraper-setup -- rotate   --as you@example.com --write-env .env.local   # new secret; the old one keeps working for 24 hours (--overlap-hours)
+npm run scraper-setup -- list                                                   # producers, their sources, secret validity
+```
+
+- A source already in the register is never changed; `sources` reports it, and flags it when its hosts differ from the manifest.
+- Without `--write-env`, `producer` and `rotate` print the secret once.
+- Each action is in the audit trail. Grants and automation are still recorded in the newsroom.
+
 ## Adding or changing a source
 
 1. Edit `scraper/sources.json`. `hosts` must equal the approved hosts recorded in the source register, or intake answers `URL_NOT_ALLOWED`.
 2. Run `npm run scrape -- dry-run --source <slug>` and read the JSONL it writes.
 3. Run `npm run test:scraper`. The manifest test counts sources, so update it when the list changes.
+4. Register it and give the producer access: `npm run scraper-setup -- sources --as … --source <slug>`, then `assign` with the same `--source`.
 
 A source with `"enabled": false` is never fetched, not even by a dry run. `requires` says why it is off:
 - `written_permission`: the publisher's terms forbid automated or commercial use.

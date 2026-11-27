@@ -61,6 +61,43 @@ export async function createSource(db: Db, actor: Actor, input: SourceInput, now
   });
 }
 
+export interface RegisterOutcome {
+  slug: string;
+  outcome: "registered" | "exists" | "hosts_differ" | "failed";
+  status?: string;
+  detail?: string;
+}
+
+/**
+ * Register several sources at once, such as the scraper's manifest. A source
+ * already in the register is left untouched and reported, with a note when its
+ * approved hosts differ from the input. With `trialReason`, each new source
+ * moves to under_review: intake is open, and nothing publishes while its grant
+ * is unknown.
+ */
+export async function registerSources(db: Db, actor: Actor, inputs: SourceInput[], now: Date, opts: { trialReason?: string } = {}): Promise<RegisterOutcome[]> {
+  const out: RegisterOutcome[] = [];
+  for (const input of inputs) {
+    const [existing] = await db.select({ id: sources.id, status: sources.status }).from(sources).where(eq(sources.slug, input.slug));
+    if (existing) {
+      const have = (await db.select({ host: sourceHosts.host }).from(sourceHosts).where(eq(sourceHosts.sourceId, existing.id))).map((h) => h.host).sort();
+      const want = [...new Set(input.hosts.map((h) => h.trim().toLowerCase()))].sort();
+      const same = have.length === want.length && have.every((h, i) => h === want[i]);
+      out.push(same ? { slug: input.slug, outcome: "exists", status: existing.status } : { slug: input.slug, outcome: "hosts_differ", status: existing.status, detail: `register has ${have.join(" ")}; input has ${want.join(" ")}` });
+      continue;
+    }
+    try {
+      const id = await createSource(db, actor, input, now);
+      const status = opts.trialReason ? (await sourceAction(db, actor, id, { action: "trial", reason: opts.trialReason }, now)).status : "proposed";
+      out.push({ slug: input.slug, outcome: "registered", status });
+    } catch (e) {
+      if (!(e instanceof CommandError)) throw e;
+      out.push({ slug: input.slug, outcome: "failed", detail: `${e.code} ${e.message}${e.extra?.fieldErrors ? ` ${JSON.stringify(e.extra.fieldErrors)}` : ""}` });
+    }
+  }
+  return out;
+}
+
 export interface GrantInput {
   basis: (typeof sourceGrants.$inferInsert)["basis"];
   evidenceUri: string;

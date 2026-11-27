@@ -133,13 +133,11 @@ Total: 23 + 17 + 15 = 55.
 
 ## 4. What the platform side needs to provide
 
-1. **Producer provisioning (blocking).** Only the demo seed creates producers. Production needs a command that:
-   - creates a producer and prints its key id and secret once;
-   - assigns sources to it (`producer_sources`);
-   - rotates the secret (`valid_from` / `valid_until` already allow overlap).
-2. **Source registration (blocking).** Register the 23 enabled sources from `scraper/sources.json`: slug, names, family and `hosts`.
-   - A loader that reads the file would save 23 form entries.
-   - Registering them as `proposed` or `under_review` lets the trial run without publishing anything.
+1. **Producer provisioning.** Built 27 November: `npm run scraper-setup -- producer | assign | rotate | list` (see [scraper/README.md](../scraper/README.md#platform-setup)).
+   - Creates producer `ihn-scraper`, stores its secret encrypted and assigns the manifest's sources.
+   - Shows the secret once, or writes it straight into an env file with `--write-env`.
+   - Rotation keeps the old secret valid for an overlap (24 hours by default).
+2. **Source registration.** Built 27 November: `npm run scraper-setup -- sources` registers the 23 enabled sources from `scraper/sources.json` and puts them on trial (`under_review`), so the trial runs without publishing anything.
 3. **Grants and automation (publisher).** Every source starts at grant `unknown`, so every item is held. Cards appear once the managing editor:
    - records a `link_only` grant for each accepted source;
    - enables the source;
@@ -165,8 +163,9 @@ Total: 23 + 17 + 15 = 55.
    - `npm run dev` with the demo seed;
    - `PRODUCER_KEY` / `PRODUCER_SECRET` from `npm run db:seed -- --demo`;
    - `npm run scrape -- once --source <slug>` against a demo-registered source.
-4. **Production trial.** After items 1 and 2 of section 4:
-   - Register the 23 sources as `under_review` and run `npm run scrape -- daemon` for 48 hours. Nothing goes public.
+4. **Production trial.**
+   - With the site's `DATABASE_URL` and `INGEST_SECRET_KEY` in `.env.local`: `npm run scraper-setup -- sources --as <managing editor>`, then `npm run scraper-setup -- producer --as <managing editor> --write-env .env.local`.
+   - Set `INGEST_BASE_URL=https://www.indiahealthnews.com`, run `npm run scrape -- once`, then `npm run scrape -- daemon` for 48 hours. Nothing goes public.
    - Pass: zero `url_not_allowed` and `receipt_failed` alerts; the held reasons are reviewed.
 5. **Go live.** Grants and automation per section 4, item 3.
 6. **Hosting.** The daemon needs a persistent disk for `SCRAPER_DB` and a process supervisor. A small always-on VM or container is the simplest; Vercel functions and stateless CI runners are not a fit. Who hosts it is still open.

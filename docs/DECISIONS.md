@@ -195,7 +195,9 @@ the 170 KiB budget (OPS-02), measured on a local production build.
   (GOV-01, SEC-04).
 - Field evidence: 28-day Web Vitals, the five-reader usability gate, load and
   restore rehearsals.
-- A real scraper. Phase 1 ships a fixture producer only.
+- The scraper in production. It is built (`scraper/`, with `npm run scraper-setup`
+  for its sources and producer key; see `docs/SCRAPER-HANDOVER.md`); a host for it
+  and the 48-hour trial remain.
 
 ## Infrastructure
 

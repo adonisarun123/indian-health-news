@@ -25,7 +25,8 @@
     "pib": "tsx --env-file-if-exists=.env.local scripts/pib-import.ts",
     "sources": "tsx scripts/sources-watch.ts",
     "scrape": "tsx --disable-warning=ExperimentalWarning --env-file-if-exists=.env.local scraper/main.ts",
-    "test:scraper": "vitest run --config scraper/vitest.config.ts"
+    "test:scraper": "vitest run --config scraper/vitest.config.ts",
+    "scraper-setup": "tsx --env-file-if-exists=.env.local scripts/scraper-setup.ts"
   },
   "dependencies": {
     "drizzle-orm": "^0.45.4",

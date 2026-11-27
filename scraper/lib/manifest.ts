@@ -91,4 +91,21 @@ export function pickSources(m: Manifest, only?: string[]): Source[] {
   return m.sources.filter((s) => only.includes(s.slug));
 }
 
+/**
+ * The source register entry for a manifest source, as `npm run scraper-setup -- sources`
+ * records it. The register keeps host names; path rules stay in the scraper.
+ */
+export function registerEntryOf(s: Source) {
+  return {
+    slug: s.slug,
+    legalName: s.legalName,
+    displayName: s.displayName,
+    homepageUrl: s.homepageUrl,
+    family: s.family,
+    language: "en",
+    hosts: [...new Set(s.hosts.map((h) => h.host))],
+    defaultSectionSlug: s.defaultSectionSlug ?? null,
+  };
+}
+
 export const pollMinutesOf = (s: Source) => s.pollMinutes ?? (s.adapter === "news_sitemap" ? 30 : 15);
