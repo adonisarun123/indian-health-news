@@ -1,0 +1,85 @@
+[
+  {
+    "type": "original_brief",
+    "slug": "ambedkar-medical-aid-scheme-revised-income-limit-ceilings",
+    "sectionSlug": "healthcare-delivery",
+    "headline": "Medical aid for SC and ST patients: income limit now ₹5 lakh, higher ceilings for heart, cancer, brain and spinal surgery",
+    "standfirst": "The revised Dr. Ambedkar Medical Aid Scheme pays hospitals directly, up to ₹3.50 lakh a case. Applications must reach the Foundation at least 15 days before the surgery date.",
+    "body": [
+      {
+        "type": "paragraph",
+        "text": "Scheduled Caste and Scheduled Tribe patients whose annual family income is not more than ₹5 lakh can get up to ₹3.50 lakh towards the treatment of serious and life-threatening diseases under the revised Dr. Ambedkar Medical Aid Scheme, the Ministry of Social Justice and Empowerment said on 27 November. The Dr. Ambedkar Foundation, an autonomous body under the ministry, notified the revised scheme on 2 June 2026."
+      },
+      {
+        "type": "paragraph",
+        "text": "The money is not paid to the patient. The Foundation releases 100 per cent of the estimated cost of the surgery or covered treatment directly to the hospital, subject to a ceiling for each category."
+      },
+      {
+        "type": "heading",
+        "text": "What has changed"
+      },
+      {
+        "type": "paragraph",
+        "text": "An older page describing the scheme, still on the Foundation's website and carrying no date, puts the income limit at ₹3 lakh a year. Set against that page, the revised ceilings are:"
+      },
+      {
+        "type": "list",
+        "ordered": false,
+        "items": [
+          "Heart surgery: ₹1.50 lakh (₹1.25 lakh on the older page)",
+          "Cancer surgery, chemotherapy or radiotherapy: ₹2.50 lakh (₹1.75 lakh)",
+          "Brain surgery: ₹2 lakh (₹1.50 lakh)",
+          "Spinal surgery: ₹1.50 lakh (₹1 lakh)",
+          "Other life-threatening diseases: ₹2 lakh (₹1 lakh)",
+          "Kidney surgery or dialysis, and kidney or organ transplant: ₹3.50 lakh each, the same as on the older page"
+        ]
+      },
+      {
+        "type": "paragraph",
+        "text": "Patients covered by the Pradhan Mantri Jan Arogya Yojana (PM-JAY) are not eligible, with one exception: those with renal disease or needing a kidney or organ transplant can apply. The notification gives the reason that kidney transplantation is not covered under PM-JAY. A patient with a chronic problem may seek a second, renewal grant in the next financial year."
+      },
+      {
+        "type": "heading",
+        "text": "The 15-day rule"
+      },
+      {
+        "type": "paragraph",
+        "text": "The application, on the prescribed form or on plain paper in the same format, must reach the Director, Dr. Ambedkar Foundation, 15, Janpath, New Delhi 110001, at least 15 days before the date of surgery, dialysis or chemotherapy. It must carry self-attested copies of the latest income certificate, the caste certificate and the patient's ration card or Aadhaar card, a self-attested photograph, and the original estimated cost certificate signed by the hospital's Medical Superintendent, showing the date fixed for the surgery."
+      },
+      {
+        "type": "paragraph",
+        "text": "Money already spent is ordinarily not reimbursed. Reimbursement may be considered on merit only if the application had reached the Foundation at least 15 days before the surgery."
+      },
+      {
+        "type": "paragraph",
+        "text": "Treatment has to be at a hospital recognised under the scheme. The list includes AIIMS in New Delhi and other States, all CGHS-approved hospitals, State government hospitals and hospitals attached to State government medical colleges. The application form is on the Department of Social Justice and Empowerment's website."
+      }
+    ],
+    "citations": [
+      {
+        "url": "https://www.pib.gov.in/PressReleasePage.aspx?PRID=2342749",
+        "label": "Dr. Ambedkar Medical Aid Scheme Provides Financial Assistance of up to ₹ 3.50 Lakh to SC and ST Patients for Treatment of Life-Threatening Diseases (27 November 2026)",
+        "publisherName": "Press Information Bureau",
+        "isPrimary": true
+      },
+      {
+        "url": "https://durwo6bhtjtqt.cloudfront.net/wp-content/uploads/2026/06/Revised-Dr.-Ambedkar-Medical-Aid-Scheme-dt.-02.06.2026-1.pdf",
+        "label": "Notification: Dr. Ambedkar Medical Aid Scheme (Revised-2026), 2 June 2026",
+        "publisherName": "Dr. Ambedkar Foundation"
+      },
+      {
+        "url": "https://www.dosje.gov.in/schemes-and-services/dr-ambedkar-medical-aid-scheme/",
+        "label": "Dr. Ambedkar Medical Aid Scheme (Revised in 2026): scheme page and application form",
+        "publisherName": "Department of Social Justice and Empowerment"
+      },
+      {
+        "url": "https://ambedkarfoundation.nic.in/medical.html",
+        "label": "Dr. Ambedkar Medical Aid Scheme (older, undated scheme page)",
+        "publisherName": "Dr. Ambedkar Foundation"
+      }
+    ],
+    "contribution": "prior_notice_comparison",
+    "contributionNote": "Compares the revised income limit and category-wise ceilings with those on the Foundation's older scheme page, and sets out the 15-day application deadline and the PM-JAY exception.",
+    "assistModel": "claude-fable-5-2"
+  }
+]
