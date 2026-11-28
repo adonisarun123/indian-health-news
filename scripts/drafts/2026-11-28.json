@@ -81,5 +81,67 @@
     "contribution": "prior_notice_comparison",
     "contributionNote": "Compares the revised income limit and category-wise ceilings with those on the Foundation's older scheme page, and sets out the 15-day application deadline and the PM-JAY exception.",
     "assistModel": "claude-fable-5-2"
+  },
+  {
+    "type": "original_brief",
+    "slug": "nhrc-notice-madhya-pradesh-tb-bhopal-nutrition-payments",
+    "sectionSlug": "public-health",
+    "headline": "NHRC asks Madhya Pradesh to explain reported rise in Bhopal TB patients and missed nutrition payments",
+    "standfirst": "Acting on a media report, the rights commission has given the State's Chief Secretary two weeks to reply. The figures are the report's; the commission has not verified them.",
+    "body": [
+      {
+        "type": "paragraph",
+        "text": "The National Human Rights Commission (NHRC) has issued a notice to the Chief Secretary of Madhya Pradesh, seeking a detailed report within two weeks on a reported rise in the number of registered tuberculosis (TB) patients in Bhopal. The commission said on 27 November that it had taken up the matter on its own, after a media report carried on 26 November."
+      },
+      {
+        "type": "paragraph",
+        "text": "According to that report, as cited by the commission, registered TB patients in Bhopal went up from 10,773 in 2022 to 12,850 in 2024. That is 2,077 more patients, a rise of about 19 per cent. For the State as a whole, the report put the 2025 figures at about 1.72 lakh TB cases and 4,733 deaths."
+      },
+      {
+        "type": "heading",
+        "text": "The nutrition payments"
+      },
+      {
+        "type": "paragraph",
+        "text": "The second issue is money meant for patients' food. The commission's statement says that only 1.43 lakh of the 1.77 lakh patients registered in 2024 reportedly received even a single instalment of the ₹1,000 a month paid under a government nutrition scheme, a figure attributed to the Madhya Pradesh Economic Survey. The rest received none. On those numbers, about 34,000 patients, roughly one in five, went without any payment."
+      },
+      {
+        "type": "paragraph",
+        "text": "The statement does not name the scheme. The amount is the same as under the Ni-kshay Poshan Yojana, the Centre's nutrition support for TB patients, which is paid by direct benefit transfer. On 7 October 2024 the Union Health Minister announced that this support was being raised from ₹500 to ₹1,000 a month for each patient for the entire duration of treatment, with the additional cost shared between the Centre and the States on a 60:40 basis."
+      },
+      {
+        "type": "heading",
+        "text": "What the notice means"
+      },
+      {
+        "type": "paragraph",
+        "text": "A notice is not a finding. The commission said the contents of the news report, if true, raise serious issues of human rights violations, and it has asked the State government for its account. Its statement does not give the date on which the notice was issued, so the exact day the two weeks run out is not known."
+      },
+      {
+        "type": "paragraph",
+        "text": "The Bhopal figures cover 2022 to 2024. The Union Health Ministry's intensified screening drive, the TB Mukt Bharat Abhiyaan, began later, on 7 December 2024. The ministry said on 12 November that the drive had identified 48.64 lakh new TB cases up to 8 November 2026, including 14.97 lakh in people without symptoms. Citing the World Health Organization's Global Tuberculosis Report 2026, it also said India's estimated TB death rate fell from 28 per lakh population in 2015 to 18 per lakh in 2025."
+      }
+    ],
+    "citations": [
+      {
+        "url": "https://www.pib.gov.in/PressReleasePage.aspx?PRID=2342795",
+        "label": "NHRC, India takes suo motu cognizance of the reported continuous rise in TB cases in Bhopal, Madhya Pradesh amidst Tuberculosis Free India campaign (27 November 2026)",
+        "publisherName": "Press Information Bureau",
+        "isPrimary": true
+      },
+      {
+        "url": "https://www.pib.gov.in/PressReleasePage.aspx?PRID=2062928",
+        "label": "Union Health Minister Unveils Key Initiatives to boost Nutrition Support for TB Patients and their Families (7 October 2024)",
+        "publisherName": "Press Information Bureau"
+      },
+      {
+        "url": "https://www.pib.gov.in/PressReleasePage.aspx?PRID=2335615",
+        "label": "Health Ministry release on the WHO Global Tuberculosis Report 2026 and the TB Mukt Bharat Abhiyaan (12 November 2026)",
+        "publisherName": "Press Information Bureau"
+      }
+    ],
+    "contribution": "prior_notice_comparison",
+    "contributionNote": "Works out the scale of the reported gaps (2,077 more patients; about 34,000 without a payment), links the ₹1,000 figure to the October 2024 increase in Ni-kshay Poshan Yojana support, and sets the Bhopal numbers beside the ministry's national TB figures of 12 November.",
+    "assistModel": "claude-fable-5-2"
   }
 ]
